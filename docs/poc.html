@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="連線測試">
+<link rel="manifest" href="./poc.webmanifest">
+<title>連線測試</title>
+<style>
+  :root { --bg:#fff; --fg:#1b1f24; --muted:#5b6470; --line:#d6dbe1; --ok:#1a7f37; --bad:#cf222e; --accent:#1f6feb; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0d1117; --fg:#e6edf3; --muted:#9aa4af; --line:#30363d; --ok:#3fb950; --bad:#f85149; --accent:#58a6ff; } }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; padding-top:max(16px, env(safe-area-inset-top)); background:var(--bg); color:var(--fg);
+         font: 16px/1.5 -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .muted { color:var(--muted); font-size:13px; }
+  label { display:block; font-size:14px; margin:12px 0 4px; }
+  input { width:100%; font-size:16px; padding:10px; border:1px solid var(--line); border-radius:8px; background:transparent; color:inherit; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  button { font-size:16px; padding:10px 14px; border-radius:8px; border:1px solid var(--line); background:transparent; color:inherit; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  ul { list-style:none; padding:0; margin:16px 0; }
+  li { padding:8px 0; border-bottom:1px solid var(--line); }
+  .pass { color:var(--ok); font-weight:600; } .fail { color:var(--bad); font-weight:600; }
+  pre { white-space:pre-wrap; word-break:break-all; font-size:12px; background:rgba(127,127,127,.12); padding:10px; border-radius:8px; }
+</style>
+</head>
+<body>
+<h1>步驟 0：連線測試</h1>
+<div class="muted" id="env"></div>
+
+<label for="url">Apps Script 網址（/exec 結尾）</label>
+<input id="url" type="url" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec">
+<label for="token">Token</label>
+<input id="token" type="password" autocomplete="off">
+
+<div class="row">
+  <button class="primary" id="runAll">執行全部測試</button>
+  <button id="save">只儲存設定</button>
+</div>
+
+<ul id="results"></ul>
+<pre id="log"></pre>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+$('env').textContent = `模式：${standalone ? '主畫面 App（standalone）' : '瀏覽器分頁'}｜來源：${location.origin}`;
+
+// 讀設定（Safari 私密模式等情況下 localStorage 可能不可用）
+function load(k) { try { return localStorage.getItem(k) || ''; } catch { return ''; } }
+function save(k, v) { try { localStorage.setItem(k, v); } catch {} }
+$('url').value = load('poc.url');
+$('token').value = load('poc.token');
+$('save').onclick = () => { save('poc.url', $('url').value.trim()); save('poc.token', $('token').value.trim()); log('已儲存'); };
+
+function log(s) { $('log').textContent += s + '\n'; }
+function addResult(name, pass, detail) {
+  const li = document.createElement('li');
+  const tag = document.createElement('span');
+  tag.className = pass ? 'pass' : 'fail';
+  tag.textContent = pass ? '通過 ' : '失敗 ';
+  li.append(tag, document.createTextNode(`${name}｜${detail}`));
+  $('results').append(li);
+}
+
+async function call(payload) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  const t0 = performance.now();
+  try {
+    const res = await fetch($('url').value.trim(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      redirect: 'follow',
+      signal: ctrl.signal
+    });
+    const text = await res.text();
+    const ms = Math.round(performance.now() - t0);
+    log(`[${payload.action}] HTTP ${res.status} redirected=${res.redirected} ${ms}ms\n  ${text.slice(0, 300)}`);
+    let json = null;
+    try { json = JSON.parse(text); } catch {}
+    return { json, ms };
+  } catch (err) {
+    log(`[${payload.action}] 例外：${err.name}: ${err.message}`);
+    return { json: null, error: err.name, ms: Math.round(performance.now() - t0) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+$('runAll').onclick = async () => {
+  $('results').textContent = ''; $('log').textContent = '';
+  const token = $('token').value.trim();
+  save('poc.url', $('url').value.trim()); save('poc.token', token);
+  if (!$('url').value.trim() || !token) { log('請先填網址和 token'); return; }
+
+  const r1 = await call({ token, action: 'ping', echo: '你好' });
+  addResult('正確 token 讀得到 JSON', r1.json?.ok === true && r1.json.echo === '你好',
+    r1.json ? `${r1.ms}ms，後端時間 ${r1.json.now ?? '-'}` : `讀不到 JSON（${r1.error ?? '格式錯誤'}）`);
+
+  const r2 = await call({ token: 'wrong-token', action: 'ping' });
+  addResult('錯誤 token 被拒絕', r2.json?.ok === false && r2.json.code === 'AUTH',
+    r2.json ? `code=${r2.json.code}` : '讀不到 JSON');
+
+  const r3 = await call({ token, action: 'throw' });
+  const leaked = JSON.stringify(r3.json ?? '').includes(token);
+  addResult('後端出錯仍回 JSON 且不洩漏', r3.json?.ok === false && r3.json.code === 'INTERNAL' && !leaked,
+    r3.json ? `code=${r3.json.code}${leaked ? '（洩漏 token！）' : ''}` : '讀不到 JSON');
+
+  const r4 = await call({ token, action: 'ping' });
+  addResult('第二次呼叫（熱啟動）', r4.json?.ok === true, `${r4.ms}ms`);
+};
+</script>
+</body>
+</html>

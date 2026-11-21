@@ -1,0 +1,14 @@
+# 個人規劃書與本機設定：不進公開 repo
+personal-tools-plan*.md
+.claude/
+
+# 機密與工具憑證
+.env
+.env.*
+.clasprc.json
+*.local.*
+
+# 依賴與系統檔
+node_modules/
+.DS_Store
+Thumbs.db
