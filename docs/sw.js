@@ -2,7 +2,7 @@
 // API（Apps Script，跨網域）一律不經過這裡，永遠走網路。
 // 改版時執行 `node tools/bump-version.mjs`，會同時更新這裡和 js/config.js。
 
-const CACHE_VERSION = '1.0.0';
+const CACHE_VERSION = '1.1.0';
 const CACHE_NAME = `shell-${CACHE_VERSION}`;
 
 const SHELL = [
@@ -16,6 +16,10 @@ const SHELL = [
   './js/store.js',
   './js/ui.js',
   './js/sw-client.js',
+  './js/lib/rewards.js',
+  './data/cards.json',
+  './data/rewards.json',
+  './data/merchants.json',
   './js/pages/cards.js',
   './js/pages/flights.js',
   './js/pages/events.js',

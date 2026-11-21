@@ -1,0 +1,7 @@
+{
+  "cards": [
+    { "card_id": "taishin_richart", "bank": "台新銀行", "name": "台新 Richart 卡" },
+    { "card_id": "jko_card", "bank": "街口聯名卡", "name": "街口卡" },
+    { "card_id": "dawho", "bank": "永豐銀行", "name": "大戶卡（DAWHO）" }
+  ]
+}

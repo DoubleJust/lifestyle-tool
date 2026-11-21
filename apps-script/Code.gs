@@ -10,7 +10,7 @@
  * 部署：「管理部署作業」→ 編輯（鉛筆）→ 版本選「新版本」→ 部署。這樣 /exec 網址才不會變。
  */
 
-const BACKEND_VERSION = '1.0.0';
+const BACKEND_VERSION = '1.1.0';
 
 /**
  * action 白名單。limit = 每日呼叫上限（台北時間每天 00:00 重算）。
@@ -26,6 +26,13 @@ const ACTIONS = {
         tz: Session.getScriptTimeZone(),
         echo: typeof params.echo === 'string' ? params.echo.slice(0, 200) : null
       };
+    }
+  },
+  // F1：持有的信用卡（試算表 my_cards 工作表）
+  'cards.getMine': {
+    limit: 200,
+    handler: function () {
+      return { card_ids: readMyCards_() };
     }
   },
   // 步驟 0 測試頁（docs/poc.html）用：故意出錯，確認錯誤不會外洩

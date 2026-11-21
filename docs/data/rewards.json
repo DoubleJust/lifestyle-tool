@@ -1,0 +1,132 @@
+{
+  "_comment": "來源：擁有者 2026-11-22 整理的規則＋台新官網（Pay著刷通路、LINE Pay 排除項目）。Richart 所有方案同屬 stacking_group 'richart'，同一筆消費只取最高方案（需在 App 切換）。",
+  "rules": [
+    {
+      "rule_id": "richart_chill_10_dining", "card_id": "taishin_richart", "plan": "Chill刷", "name": "Chill刷 指定餐廳",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchants": ["jhanji", "haidilao", "umai", "second_floor", "the_diner", "cafe_acme"] },
+      "reward": { "rate": 0.10, "type": "points", "point_value": 1, "no_cap": true },
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "richart_chill_10_drinks", "card_id": "taishin_richart", "plan": "Chill刷", "name": "Chill刷 指定飲料",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchants": ["50lan", "dezheng", "wootea", "guiji", "ugtea", "dingge", "compose"] },
+      "reward": { "rate": 0.10, "type": "points", "point_value": 1, "no_cap": true },
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "richart_chill_5", "card_id": "taishin_richart", "plan": "Chill刷", "name": "Chill刷 串流／健身／運動品牌",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchants": ["netflix", "disneyplus", "pinkoi", "anytime", "fitness_factory", "worldgym", "adidas", "newbalance", "puma", "nike", "hoka"] },
+      "reward": { "rate": 0.05, "type": "points", "point_value": 1, "no_cap": true },
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "richart_chill_33", "card_id": "taishin_richart", "plan": "Chill刷", "name": "Chill刷 3C／網購",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchants": ["apple", "dji", "insta360", "gopro", "shopee", "taobao", "coupang", "ubereats"] },
+      "reward": { "rate": 0.033, "type": "points", "point_value": 1, "no_cap": true },
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "richart_pay_taishinpay", "card_id": "taishin_richart", "plan": "Pay著刷", "name": "Pay著刷 台新Pay",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchants": ["seven", "familymart", "hilife", "okmart", "net", "skm", "elifemall", "mcdonalds"], "payment_methods": ["taishin_pay"] },
+      "reward": { "rate": 0.038, "type": "points", "point_value": 1, "no_cap": true },
+      "notes": ["官方通路清單未列完整"],
+      "stacking_group": "richart", "last_verified": "2026-11-22",
+      "source_url": "https://www.taishinbank.com.tw/TSB/personal/common/news/TSBankNews-007586/"
+    },
+    {
+      "rule_id": "richart_pay_linepay", "card_id": "taishin_richart", "plan": "Pay著刷", "name": "Pay著刷 LINE Pay",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "payment_methods": ["line_pay"] },
+      "reward": { "rate": 0.023, "type": "points", "point_value": 1, "no_cap": true },
+      "exclusions": ["overseas", "convenience", "tax"],
+      "notes": ["限台灣境內新台幣交易", "不含四大超商、繳稅費", "適用通路依 LINE Pay 公告"],
+      "stacking_group": "richart", "last_verified": "2026-11-22",
+      "source_url": "https://www.taishinbank.com.tw/TSB/personal/common/news/TSBankNews-007586/"
+    },
+    {
+      "rule_id": "richart_daily_cvs", "card_id": "taishin_richart", "plan": "天天刷", "name": "天天刷 超商",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchants": ["familymart", "seven"], "payment_methods": ["taishin_pay"] },
+      "reward": { "rate": 0.033, "type": "points", "point_value": 1, "no_cap": true },
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "richart_daily", "card_id": "taishin_richart", "plan": "天天刷", "name": "天天刷 量販／交通／藥妝",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchants": ["wanjiafu", "lejiakang", "donki", "lopia", "tra", "thsr", "uber", "cpc", "poya", "cosmed", "watsons"] },
+      "reward": { "rate": 0.033, "type": "points", "point_value": 1, "no_cap": true },
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "richart_big", "card_id": "taishin_richart", "plan": "大筆刷", "name": "大筆刷 百貨／家居／服飾",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchants": ["skm", "fe_dept", "sogo", "breeze", "taipei101", "eslite", "qsquare", "syntrend", "uni_ustyle", "lalaport", "mitsui_outlet", "gloria_outlets", "ikea", "bq", "hola", "uniqlo", "gu", "zara", "net"] },
+      "reward": { "rate": 0.033, "type": "points", "point_value": 1, "no_cap": true },
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "richart_dining", "card_id": "taishin_richart", "plan": "好饗刷", "name": "好饗刷 餐飲／外送／娛樂",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchant_categories": ["dining", "concert"], "merchants": ["ubereats", "foodpanda", "cashbox", "holiday_ktv"] },
+      "reward": { "rate": 0.033, "type": "points", "point_value": 1, "no_cap": true },
+      "notes": ["全台餐飲不含餐券"],
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "richart_digital", "card_id": "taishin_richart", "plan": "數趣刷", "name": "數趣刷 網購／訂閱",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchants": ["shopee", "momo", "pchome", "taobao", "amazon", "books_tw", "amazingtalker", "hahow", "steam", "playstation", "netflix", "disneyplus", "chatgpt", "notion", "canva", "claude"] },
+      "reward": { "rate": 0.033, "type": "points", "point_value": 1, "no_cap": true },
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "richart_travel", "card_id": "taishin_richart", "plan": "玩旅刷", "name": "玩旅刷 海外／航空／訂房",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": {
+        "merchant_categories": ["overseas"],
+        "merchants": ["china_airlines", "eva_air", "starlux", "tigerair", "cathay_pacific", "mandarin_airlines", "uni_air", "peach", "emirates", "airasia", "scoot", "jetstar", "singapore_airlines", "jal", "vietjet", "klook", "kkday", "agoda", "booking", "tripcom", "airbnb", "hotelscom", "uber", "grab", "suica", "eztravel"]
+      },
+      "reward": { "rate": 0.033, "type": "points", "point_value": 1, "no_cap": true },
+      "notes": ["海外含實體及線上、含歐洲"],
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "richart_holiday", "card_id": "taishin_richart", "plan": "假日刷", "name": "假日刷 不限通路",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "holiday_only": true },
+      "reward": { "rate": 0.02, "type": "points", "point_value": 1, "no_cap": true },
+      "notes": ["含保費、LINE Pay、全盈+Pay"],
+      "stacking_group": "richart", "last_verified": "2026-11-22"
+    },
+
+    {
+      "rule_id": "jko_event2", "card_id": "jko_card", "name": "活動二 指定通路",
+      "valid_until": "2026-12-31",
+      "conditions": { "merchants": ["klook", "kkday", "eztravel", "agoda", "airbnb", "thsr", "uber", "skm", "fe_dept", "lalaport", "mitsui_outlet", "cosmed", "simplemart", "ubereats", "foodpanda", "foodomo", "eztable", "85c", "chingshin", "sanshang", "vieshow", "ambassador_cinema", "skcinema", "showtime", "cashbox", "holiday_ktv", "superstar"] },
+      "reward": { "rate": 0.035, "type": "cash", "spend_cap": 400000, "cap_period": "month" },
+      "stacking_group": "jko", "last_verified": "2026-11-22"
+    },
+
+    {
+      "rule_id": "dawho_domestic", "card_id": "dawho", "name": "國內一般消費",
+      "valid_until": "2026-12-31",
+      "conditions": {},
+      "exclusions": ["overseas"],
+      "reward": { "rate": 0.035, "type": "cash", "spend_cap": 16000, "cap_period": "month" },
+      "notes": ["刷 LINE Pay 也算"],
+      "stacking_group": "dawho", "last_verified": "2026-11-22"
+    },
+    {
+      "rule_id": "dawho_overseas", "card_id": "dawho", "name": "國外一般消費",
+      "valid_until": "2026-12-31",
+      "conditions": { "merchant_categories": ["overseas"] },
+      "reward": { "rate": 0.045, "type": "cash", "spend_cap": 16000, "cap_period": "month" },
+      "stacking_group": "dawho", "last_verified": "2026-11-22"
+    }
+  ]
+}

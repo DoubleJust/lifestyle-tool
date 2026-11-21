@@ -1,0 +1,11 @@
+{
+  "name": "lifestyle-tool",
+  "private": true,
+  "type": "module",
+  "description": "個人用 PWA 工具箱（無建置步驟；此檔只用來跑測試與工具腳本）",
+  "scripts": {
+    "test": "node --test tests/",
+    "serve": "node tools/serve.mjs 8080",
+    "bump": "node tools/bump-version.mjs"
+  }
+}
