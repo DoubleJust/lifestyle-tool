@@ -97,9 +97,11 @@ $('runAll').onclick = async () => {
   save('poc.url', $('url').value.trim()); save('poc.token', token);
   if (!$('url').value.trim() || !token) { log('請先填網址和 token'); return; }
 
-  const r1 = await call({ token, action: 'ping', echo: '你好' });
-  addResult('正確 token 讀得到 JSON', r1.json?.ok === true && r1.json.echo === '你好',
-    r1.json ? `${r1.ms}ms，後端時間 ${r1.json.now ?? '-'}` : `讀不到 JSON（${r1.error ?? '格式錯誤'}）`);
+  // 新版後端：參數放 params、結果放 data；同時相容步驟 0 的舊格式
+  const r1 = await call({ token, action: 'ping', echo: '你好', params: { echo: '你好' } });
+  const d1 = r1.json?.data ?? r1.json;
+  addResult('正確 token 讀得到 JSON', r1.json?.ok === true && d1?.echo === '你好',
+    r1.json ? `${r1.ms}ms，後端時間 ${d1?.now ?? '-'}` : `讀不到 JSON（${r1.error ?? '格式錯誤'}）`);
 
   const r2 = await call({ token: 'wrong-token', action: 'ping' });
   addResult('錯誤 token 被拒絕', r2.json?.ok === false && r2.json.code === 'AUTH',

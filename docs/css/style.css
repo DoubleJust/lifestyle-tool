@@ -1,0 +1,130 @@
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --fg: #1b1f24;
+  --muted: #59636e;
+  --line: #d6dbe1;
+  --accent: #1f6feb;
+  --accent-fg: #ffffff;
+  --ok: #1a7f37;
+  --warn: #9a6700;
+  --bad: #cf222e;
+  --tabbar-h: 56px;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --fg: #e6edf3;
+    --muted: #9aa4af;
+    --line: #30363d;
+    --accent: #4493f8;
+    --accent-fg: #ffffff;
+    --ok: #3fb950;
+    --warn: #d29922;
+    --bad: #f85149;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.55 -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  min-height: 100dvh;
+}
+
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar h1 { margin: 0; font-size: 20px; font-weight: 700; }
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 16px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 24px);
+  outline: none;
+}
+
+/* 底部分頁列 */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-top: 1px solid var(--line);
+}
+.tabbar a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--muted); text-decoration: none; font-size: 11px;
+  -webkit-tap-highlight-color: transparent;
+}
+.tabbar svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.tabbar a[aria-current="page"] { color: var(--accent); }
+
+/* 新版本提示 */
+.update-banner {
+  position: sticky; top: calc(env(safe-area-inset-top) + 49px); z-index: 9;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 0; padding: 10px 16px;
+  background: var(--accent); color: var(--accent-fg); font-size: 15px;
+}
+.update-banner[hidden] { display: none; }
+.update-banner button { background: var(--accent-fg); color: var(--accent); border: 0; }
+
+/* 通用元件 */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.card h2 { margin: 0 0 8px; font-size: 17px; }
+.card p { margin: 0 0 8px; }
+.muted { color: var(--muted); font-size: 14px; }
+
+label { display: block; font-size: 14px; color: var(--muted); margin: 12px 0 4px; }
+input[type="text"], input[type="password"], input[type="url"], input[type="number"], select {
+  width: 100%; font: inherit; font-size: 16px; /* 16px 以上 iOS 才不會自動放大 */
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--bg); color: var(--fg);
+}
+input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+button {
+  font: inherit; font-size: 15px; padding: 9px 14px; min-height: 40px;
+  border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--fg); cursor: pointer;
+}
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+button:disabled { opacity: .55; cursor: default; }
+
+.status { margin-top: 12px; font-size: 14px; }
+.status.ok { color: var(--ok); }
+.status.warn { color: var(--warn); }
+.status.bad { color: var(--bad); }
+
+dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 8px 0 0; font-size: 14px; }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; word-break: break-all; }
+
+ol.steps { margin: 8px 0 0; padding-left: 20px; }
+ol.steps li { margin: 4px 0; }
+
+.placeholder { text-align: center; padding: 32px 16px; }
+.placeholder .big { font-size: 40px; margin-bottom: 8px; }
