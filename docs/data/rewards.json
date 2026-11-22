@@ -32,10 +32,19 @@
     {
       "rule_id": "richart_pay_taishinpay", "card_id": "taishin_richart", "plan": "Pay著刷", "name": "Pay著刷 台新Pay",
       "valid_from": "2026-07-01", "valid_until": "2027-12-31",
-      "conditions": { "merchants": ["seven", "familymart", "hilife", "okmart", "net", "skm", "elifemall", "mcdonalds"], "payment_methods": ["taishin_pay"] },
+      "conditions": { "merchants": ["seven", "familymart", "hilife", "okmart", "net", "skm"], "payment_methods": ["taishin_pay"] },
       "reward": { "rate": 0.038, "type": "points", "point_value": 1, "no_cap": true },
-      "notes": ["官方通路清單未列完整"],
-      "stacking_group": "richart", "last_verified": "2026-11-22",
+      "notes": ["四大超商單筆限額 NT$3,000"],
+      "stacking_group": "richart", "last_verified": "2026-11-23",
+      "source_url": "https://mkp.taishinbank.com.tw/s/2022/taishinpay/cooperation-scan_pay.html"
+    },
+    {
+      "rule_id": "richart_pay_twqr", "card_id": "taishin_richart", "plan": "Pay著刷", "name": "Pay著刷 台灣Pay（TWQR）",
+      "valid_from": "2026-07-01", "valid_until": "2027-12-31",
+      "conditions": { "merchants": ["mcdonalds", "elifemall"], "payment_methods": ["taiwan_pay"] },
+      "reward": { "rate": 0.038, "type": "points", "point_value": 1, "no_cap": true },
+      "notes": ["不支援台新 Pay，要掃 TWQR 付款", "官網只寫「最高 3.8%」"],
+      "stacking_group": "richart", "last_verified": "2026-11-23",
       "source_url": "https://www.taishinbank.com.tw/TSB/personal/common/news/TSBankNews-007586/"
     },
     {

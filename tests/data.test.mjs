@@ -139,9 +139,11 @@ test('台新不回饋項目：Richart、街口都排除', () => {
     // iCloud 不指定支付方式時，會列出街口支付限定的 1%（另一個測試）
     if (q !== 'iCloud') assert.equal(r.jko_card, undefined, `${q} 不應該有街口回饋`);
   }
-  // 麥當勞：好饗刷（餐飲）不算，只有台新Pay 的 Pay著刷 例外
+  // 麥當勞：好饗刷（餐飲）不算；台新Pay 不支援，只有台灣Pay（TWQR）的 Pay著刷
   assert.equal(rates('麥當勞', { pay: 'physical' }).taishin_richart, undefined);
-  assert.equal(rates('麥當勞', { pay: 'taishin_pay' }).taishin_richart, 3.8);
+  assert.equal(rates('麥當勞', { pay: 'taishin_pay' }).taishin_richart, undefined);
+  assert.equal(rates('麥當勞', { pay: 'taiwan_pay' }).taishin_richart, 3.8);
+  assert.equal(rates('全國電子', { pay: 'taishin_pay' }).taishin_richart, undefined);
   // 假日刷也不能用在不回饋項目
   assert.equal(rates('全聯', { holiday: true }).taishin_richart, undefined);
 });
