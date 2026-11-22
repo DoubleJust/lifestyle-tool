@@ -32,9 +32,12 @@
     {
       "rule_id": "richart_pay_taishinpay", "card_id": "taishin_richart", "plan": "Pay著刷", "name": "Pay著刷 台新Pay",
       "valid_from": "2026-07-01", "valid_until": "2027-12-31",
-      "conditions": { "merchants": ["seven", "familymart", "hilife", "okmart", "net", "skm"], "payment_methods": ["taishin_pay"] },
+      "conditions": {
+        "merchants": ["seven", "familymart", "hilife", "okmart", "ikea", "skm", "cosmed", "net", "adidas", "burgerking", "umai", "fengkang", "nine_nine", "kuangnan", "cajintang", "lianan", "yuchuan", "healthlife", "maguang", "beyond_plaza", "richart_mart", "smile_sports", "att4fun", "dcc_square", "kenting_district", "shangshun", "et_mall_3t", "momentum", "chungyo", "tuan486", "cadomo", "huashan1914", "so_nice", "fifty_percent", "iroo", "taxi_55688", "ntmetro", "autoyi", "louisa", "ikari", "family_court", "caimeng_dining", "xiang_chengmeng", "seding", "jin_korean", "shabu_umai", "chaliu"],
+        "payment_methods": ["taishin_pay"]
+      },
       "reward": { "rate": 0.038, "type": "points", "point_value": 1, "no_cap": true },
-      "notes": ["四大超商單筆限額 NT$3,000"],
+      "notes": ["通路依台新Pay合作商店一覽", "四大超商單筆限額 NT$3,000", "全聯／大全聯不回饋"],
       "stacking_group": "richart", "last_verified": "2026-11-23",
       "source_url": "https://mkp.taishinbank.com.tw/s/2022/taishinpay/cooperation-scan_pay.html"
     },

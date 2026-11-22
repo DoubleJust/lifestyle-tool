@@ -65,7 +65,7 @@ test('超商：LINE Pay 不回饋，台新Pay 3.8%', () => {
   assert.equal(rates('全家', { pay: 'taishin_pay' }).taishin_richart, 3.8);
 });
 test('國定假日：不在任何方案的店 Richart 至少 2%', () => {
-  assert.equal(rates('IKEA').taishin_richart, 3.3);
+  assert.equal(rates('IKEA', { pay: 'physical' }).taishin_richart, 3.3);
   assert.equal(rates('威秀', { pay: 'physical' }).taishin_richart, undefined);
   assert.equal(rates('威秀', { pay: 'physical', holiday: true }).taishin_richart, 2);
 });
@@ -156,4 +156,14 @@ test('例外：街口卡用街口支付付 Apple 媒體服務 1%', () => {
 test('大戶悠遊卡自動加值 3%，不另享一般消費回饋', () => {
   assert.deepEqual(rates('悠遊卡自動加值'), { dawho: 3 });
   assert.equal(byId(run('悠遊卡自動加值', 5000), 'dawho').total, 100, '每月上限 NT$100');
+});
+
+test('Pay著刷 台新Pay：合作商店一覽都算 3.8%，全聯除外', () => {
+  for (const q of ['康是美', 'IKEA', '漢堡王', '路易莎', '新光三越', '台灣大車隊', '比漾廣場', '茶六']) {
+    assert.equal(rates(q, { pay: 'taishin_pay' }).taishin_richart, 3.8, `${q} 台新Pay 應該 3.8%`);
+  }
+  assert.equal(rates('屋馬', { pay: 'taishin_pay' }).taishin_richart, 10, '屋馬取較高的 Chill刷 10%');
+  assert.equal(rates('漢堡王', { pay: 'physical' }).taishin_richart, undefined, '速食刷實體卡不回饋');
+  assert.equal(rates('全聯', { pay: 'taishin_pay' }).taishin_richart, undefined);
+  assert.equal(rates('大全聯', { pay: 'taishin_pay' }).taishin_richart, undefined);
 });
