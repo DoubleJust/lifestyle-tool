@@ -33,7 +33,8 @@
     { "id": "tax", "name": "繳稅" },
     { "id": "fine", "name": "罰款" },
     { "id": "parking", "name": "停車費" },
-    { "id": "investment", "name": "境外投資／匯款平台" }
+    { "id": "investment", "name": "境外投資／匯款平台" },
+    { "id": "stored_value", "name": "儲值卡自動加值" }
   ],
   "merchants": [
     { "id": "jhanji", "name": "詹記麻辣火鍋", "aliases": ["詹記"], "categories": ["dining"] },
@@ -68,7 +69,7 @@
     { "id": "hilife", "name": "萊爾富", "aliases": ["Hi-Life"], "categories": ["convenience"] },
     { "id": "okmart", "name": "OK超商", "aliases": ["OK便利商店", "OKmart"], "categories": ["convenience"] },
 
-    { "id": "pxmart", "name": "全聯", "aliases": ["全聯福利中心", "PX Mart"], "categories": ["supermarket"] },
+    { "id": "pxmart", "name": "全聯", "aliases": ["全聯福利中心", "大全聯", "PX Mart"], "categories": ["supermarket"] },
     { "id": "wanjiafu", "name": "萬家福", "aliases": [], "categories": ["supermarket"] },
     { "id": "lejiakang", "name": "樂家康", "aliases": [], "categories": ["supermarket"] },
     { "id": "donki", "name": "唐吉訶德", "aliases": ["DON DON DONKI", "唐吉", "驚安殿堂"], "categories": ["supermarket"] },
@@ -126,6 +127,11 @@
     { "id": "books_tw", "name": "博客來", "aliases": [], "categories": ["books"] },
 
     { "id": "netflix", "name": "Netflix", "aliases": ["網飛"], "categories": ["streaming"] },
+    { "id": "youtube", "name": "YouTube Premium", "aliases": ["YouTube", "YouTube Music", "YT Premium"], "categories": ["streaming"] },
+    { "id": "spotify", "name": "Spotify", "aliases": [], "categories": ["streaming"] },
+    { "id": "tiktok", "name": "TikTok", "aliases": ["抖音"], "categories": ["streaming"] },
+    { "id": "apple_media", "name": "Apple 媒體服務", "aliases": ["iCloud", "App Store", "iTunes", "Apple Music", "Apple TV+", "Apple One", "APPLE.COM/BILL"], "categories": ["streaming"] },
+    { "id": "google_services", "name": "Google 服務", "aliases": ["Google", "Google Play", "Google One", "Google Drive"], "categories": ["software"] },
     { "id": "disneyplus", "name": "Disney+", "aliases": ["Disney Plus", "迪士尼+"], "categories": ["streaming"] },
     { "id": "chatgpt", "name": "ChatGPT", "aliases": ["OpenAI"], "categories": ["software"] },
     { "id": "notion", "name": "Notion", "aliases": [], "categories": ["software"] },
@@ -182,6 +188,8 @@
     { "id": "tax_payment", "name": "繳稅", "aliases": ["稅款", "所得稅", "牌照稅", "燃料稅", "房屋稅", "地價稅"], "categories": ["tax"] },
     { "id": "fine_payment", "name": "罰款", "aliases": ["罰單", "交通罰單"], "categories": ["fine"] },
     { "id": "parking_fee", "name": "停車費", "aliases": ["停車場", "路邊停車"], "categories": ["parking"] },
-    { "id": "overseas_remit", "name": "境外投資／匯款", "aliases": ["海外券商", "國際匯款", "匯款"], "categories": ["investment"] }
+    { "id": "overseas_remit", "name": "境外投資／匯款", "aliases": ["海外券商", "國際匯款", "匯款"], "categories": ["investment"] },
+    { "id": "easycard_autoload", "name": "悠遊卡自動加值", "aliases": ["悠遊卡加值", "悠遊卡"], "categories": ["stored_value"] },
+    { "id": "other_autoload", "name": "icash／一卡通自動加值", "aliases": ["icash", "一卡通", "icash加值", "一卡通加值", "自動加值"], "categories": ["stored_value"] }
   ]
 }

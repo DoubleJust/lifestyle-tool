@@ -56,11 +56,18 @@ function daysBetween(a, b) {
   return Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
 }
 
+function hitsExclusion(ex, ctx) {
+  if (!ex || !ex.length) return false;
+  return (ctx.merchantId && ex.includes(ctx.merchantId)) || (ctx.categories || []).some((x) => ex.includes(x));
+}
+
 /**
  * 判斷一條規則是否適用。ctx：{ date, merchantId, categories[], paymentMethod, includeNewCardholder }
+ * card：可選，帶入卡片層級的 exclusions（銀行的「不回饋項目」）。
+ *   規則的 merchants[] 明確列出這家店時，卡片層級的排除不套用（例：台新Pay 在 7-11 是官方例外）。
  * 回傳 { ok: boolean, reason?: string }
  */
-export function ruleApplies(rule, ctx) {
+export function ruleApplies(rule, ctx, card = null) {
   if (rule.enabled === false) return { ok: false, reason: 'disabled' };
   if (rule.valid_from && ctx.date < rule.valid_from) return { ok: false, reason: 'not_started' };
   if (rule.valid_until && ctx.date > rule.valid_until) return { ok: false, reason: 'expired' };
@@ -72,16 +79,14 @@ export function ruleApplies(rule, ctx) {
   const cats = ctx.categories || [];
   const byMerchant = Array.isArray(c.merchants) && c.merchants.length > 0;
   const byCategory = Array.isArray(c.merchant_categories) && c.merchant_categories.length > 0;
+  const named = byMerchant && !!ctx.merchantId && c.merchants.includes(ctx.merchantId);
   if (byMerchant || byCategory) {
-    const hitM = byMerchant && ctx.merchantId && c.merchants.includes(ctx.merchantId);
     const hitC = byCategory && cats.some((x) => c.merchant_categories.includes(x));
-    if (!hitM && !hitC) return { ok: false, reason: 'channel' };
+    if (!named && !hitC) return { ok: false, reason: 'channel' };
   }
 
-  const ex = rule.exclusions || [];
-  if (ex.length && ((ctx.merchantId && ex.includes(ctx.merchantId)) || cats.some((x) => ex.includes(x)))) {
-    return { ok: false, reason: 'excluded' };
-  }
+  if (hitsExclusion(rule.exclusions, ctx)) return { ok: false, reason: 'excluded' };
+  if (card && !named && hitsExclusion(card.exclusions, ctx)) return { ok: false, reason: 'card_excluded' };
 
   const pm = ctx.paymentMethod;
   if (Array.isArray(c.payment_methods) && c.payment_methods.length && pm && pm !== 'any' && !c.payment_methods.includes(pm)) {
@@ -106,6 +111,19 @@ export function ruleReward(rule, amount) {
   if (typeof r.cap === 'number' && value > r.cap) { value = r.cap; capped = true; }
   // exact 用來比較與算回饋率；value 只是顯示用的四捨五入（金額很小時兩者差很多，例如 1 元）
   return { value: Math.round(value * 100) / 100, exact: value, rate: rate * pv, capped, belowMin };
+}
+
+/**
+ * 依卡片的計算方式把「這一筆」的回饋取整（cards.json 的 rounding）：
+ *   floor：逐筆、小數無條件捨去（台新 Richart）
+ *   round：逐筆、四捨五入到個位數（街口卡）
+ *   其他／未填：不逐筆取整（例：大戶卡依整月帳單合計計算）
+ */
+export function roundPayout(value, mode) {
+  const EPS = 1e-9; // 避免 0.033 × 1000 = 32.999999… 被捨成 32
+  if (mode === 'floor') return Math.floor(value + EPS);
+  if (mode === 'round') return Math.round(value + EPS);
+  return value;
 }
 
 /** 規則的條件標籤（顯示用） */
@@ -149,7 +167,7 @@ export function recommend(input) {
   for (const rule of rules) {
     if (!cardById.has(rule.card_id)) continue;
     if (ownedIds && !ownedIds.has(rule.card_id)) continue;
-    if (!ruleApplies(rule, input).ok) continue;
+    if (!ruleApplies(rule, input, cardById.get(rule.card_id)).ok) continue;
     const rw = ruleReward(rule, amount);
     const group = rule.stacking_group || 'default';
     const entry = perCard.get(rule.card_id) || new Map();
@@ -174,18 +192,22 @@ export function recommend(input) {
         source_url: rule.source_url || null,
         stale: !rule.last_verified || daysBetween(rule.last_verified, date) > STALE_DAYS
       }));
+    const card = cardById.get(cardId);
+    const payout = roundPayout(exactTotal, card.rounding);
     results.push({
-      card: cardById.get(cardId),
-      total: Math.round(exactTotal * 100) / 100,
-      exactTotal,
-      effectiveRate: amount > 0 ? exactTotal / amount : 0,
+      card,
+      total: Math.round(payout * 100) / 100,   // 這一筆實際拿到的（已依卡片規則取整）
+      payout,
+      exactTotal,                               // 取整前
+      roundedAway: exactTotal - payout,          // 被取整吃掉的部分（四捨五入進位時為負）
+      effectiveRate: amount > 0 ? exactTotal / amount : 0, // 方案回饋率，不受取整影響
       parts,
       stale: parts.some((p) => p.stale)
     });
   }
 
-  // 依回饋率排序（金額相同所以等同依回饋金額）；浮點誤差內視為相同，再依 cards.json 順序
+  // 依實際拿到的回饋排序；浮點誤差內視為相同，再依 cards.json 順序
   return results.sort((a, b) =>
-    (Math.abs(b.exactTotal - a.exactTotal) > 1e-9 ? b.exactTotal - a.exactTotal : 0) ||
+    (Math.abs(b.payout - a.payout) > 1e-9 ? b.payout - a.payout : 0) ||
     cardOrder.get(a.card.card_id) - cardOrder.get(b.card.card_id));
 }

@@ -16,6 +16,7 @@ test('資料完整性：id 不重複、引用都存在', () => {
   assert.equal(cardIds.size, cards.length, 'card_id 重複');
   assert.equal(merchantIds.size, merchants.length, 'merchant id 重複');
   assert.equal(new Set(rules.map((r) => r.rule_id)).size, rules.length, 'rule_id 重複');
+  for (const c of cards) for (const id of c.exclusions || []) assert.ok(catIds.has(id) || merchantIds.has(id), `${c.card_id} 排除不存在的 ${id}`);
   for (const m of merchants) for (const c of m.categories) assert.ok(catIds.has(c), `${m.id} 的類別 ${c} 不存在`);
   for (const r of rules) {
     assert.ok(cardIds.has(r.card_id), `${r.rule_id} 的 card_id 不存在`);
@@ -101,8 +102,56 @@ test('店名對到多個通路時都要列出（例：「星」→ 星宇航空�
   assert.ok(ids.includes('starlux') && ids.includes('superstar'));
 });
 
-test('大戶每月消費上限 16,000：刷 20,000 只算 16,000 的 3.5%', () => {
-  const m = findMerchants('UNIQLO', merchants)[0];
-  const res = recommend({ cards, rules, amount: 20000, date: DATE, merchantId: m.id, categories: m.categories, paymentMethod: 'any' });
-  assert.equal(res.find((r) => r.card.card_id === 'dawho').total, 560);
+function run(query, amount, opts = {}) {
+  const m = findMerchants(query, merchants)[0];
+  assert.ok(m, `找不到「${query}」`);
+  return recommend({ cards, rules, amount, date: DATE, merchantId: m.id, categories: m.categories, paymentMethod: opts.pay || 'any' });
+}
+const byId = (res, id) => res.find((r) => r.card.card_id === id);
+
+test('大戶：基本 1% 無上限＋任務加碼 2.5% 每月上限 NT$400', () => {
+  const res = run('UNIQLO', 20000);
+  assert.equal(byId(res, 'dawho').total, 600, '20,000 × 1% + 400');
+  assert.equal(byId(run('UNIQLO', 16000), 'dawho').total, 560, '16,000 剛好 3.5%');
+  assert.equal(byId(run('海外', 20000), 'dawho').total, 800, '20,000 × 2% + 400');
+});
+
+test('逐筆取整：Richart 捨去、街口四捨五入、大戶不取整', () => {
+  // 高鐵 NT$100：Richart 3.3 → 3、街口 3.5 → 4、大戶 3.5
+  const res = run('高鐵', 100);
+  assert.equal(byId(res, 'taishin_richart').total, 3);
+  assert.equal(byId(res, 'jko_card').total, 4);
+  assert.equal(byId(res, 'dawho').total, 3.5);
+  assert.deepEqual(res.map((r) => r.card.card_id), ['jko_card', 'dawho', 'taishin_richart']);
+  // NT$10：Richart 0.33 → 0、街口 0.35 → 0，大戶 0.35 排第一
+  const small = run('高鐵', 10);
+  assert.equal(small[0].card.card_id, 'dawho');
+  assert.equal(byId(small, 'taishin_richart').total, 0);
+  assert.equal(byId(small, 'jko_card').total, 0);
+  // 回饋率不受取整影響
+  assert.equal(Math.round(byId(small, 'taishin_richart').effectiveRate * 1000) / 10, 3.3);
+});
+
+test('台新不回饋項目：Richart、街口都排除', () => {
+  for (const q of ['YouTube', 'Spotify', '抖音', 'iCloud', 'Google Play', '悠遊卡自動加值', 'icash', '大全聯', '停車費', '罰單']) {
+    const r = rates(q);
+    assert.equal(r.taishin_richart, undefined, `${q} 不應該有 Richart 回饋`);
+    // iCloud 不指定支付方式時，會列出街口支付限定的 1%（另一個測試）
+    if (q !== 'iCloud') assert.equal(r.jko_card, undefined, `${q} 不應該有街口回饋`);
+  }
+  // 麥當勞：好饗刷（餐飲）不算，只有台新Pay 的 Pay著刷 例外
+  assert.equal(rates('麥當勞', { pay: 'physical' }).taishin_richart, undefined);
+  assert.equal(rates('麥當勞', { pay: 'taishin_pay' }).taishin_richart, 3.8);
+  // 假日刷也不能用在不回饋項目
+  assert.equal(rates('全聯', { holiday: true }).taishin_richart, undefined);
+});
+
+test('例外：街口卡用街口支付付 Apple 媒體服務 1%', () => {
+  assert.equal(rates('iCloud', { pay: 'jko_pay' }).jko_card, 1);
+  assert.equal(rates('iCloud', { pay: 'apple_pay' }).jko_card, undefined);
+});
+
+test('大戶悠遊卡自動加值 3%，不另享一般消費回饋', () => {
+  assert.deepEqual(rates('悠遊卡自動加值'), { dawho: 3 });
+  assert.equal(byId(run('悠遊卡自動加值', 5000), 'dawho').total, 100, '每月上限 NT$100');
 });

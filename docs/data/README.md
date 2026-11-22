@@ -9,6 +9,10 @@
 | `card_id` | 唯一代號，英數與底線，例如 `cathay_cube` |
 | `bank` | 銀行名稱 |
 | `name` | 卡片名稱 |
+| `rounding` | 每筆回饋怎麼取整：`floor` 逐筆無條件捨去（台新 Richart）、`round` 逐筆四捨五入到個位（街口卡）、`none` 不逐筆取整（大戶卡依整月帳單合計） |
+| `rounding_note` | 計算方式說明，顯示在結果卡片下方 |
+| `exclusions[]` | 銀行的「不回饋項目」（merchant 或類別 id），套用到這張卡的所有規則；但規則的 `merchants[]` 明確列出該店時不套用（官方例外，例：台新Pay 在 7-11） |
+| `exclusions_url` | 官方不回饋項目頁面 |
 
 ## merchants.json
 - `categories`：類別清單 `{ id, name }`。
@@ -31,7 +35,7 @@
 | `reward.type` | ✔ | `cash` 現金／`points` 點數／`discount` 折抵 |
 | `reward.point_value` | | 點數換算成多少元，預設 1 |
 | `reward.cap` | | 每期**回饋金額**上限（元） |
-| `reward.spend_cap` | | 每期**消費金額**上限（元），超過部分不回饋。例：大戶卡 16,000 |
+| `reward.spend_cap` | | 每期**消費金額**上限（元），超過部分不回饋。例：街口卡 400,000 |
 | `reward.cap_period` | | 上限週期 `month`／`quarter`／`year`／`campaign` |
 | `reward.no_cap` | | `true` 時顯示「無上限」 |
 | `plan` | | 需切換的方案名稱（例：Richart 的「Chill刷」），會顯示成標籤 |

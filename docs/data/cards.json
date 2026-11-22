@@ -1,7 +1,26 @@
 {
+  "_comment": "rounding：floor 逐筆無條件捨去／round 逐筆四捨五入到個位／none 不逐筆取整。exclusions：銀行的不回饋項目（merchant 或類別 id），規則的 merchants[] 明確列出該店時不套用。",
   "cards": [
-    { "card_id": "taishin_richart", "bank": "台新銀行", "name": "台新 Richart 卡" },
-    { "card_id": "jko_card", "bank": "台新銀行", "name": "街口卡" },
-    { "card_id": "dawho", "bank": "永豐銀行", "name": "大戶卡（DAWHO）" }
+    {
+      "card_id": "taishin_richart", "bank": "台新銀行", "name": "台新 Richart 卡",
+      "rounding": "floor",
+      "rounding_note": "逐筆計算，小數無條件捨去",
+      "exclusions": ["youtube", "spotify", "tiktok", "apple_media", "google_services", "investment", "stored_value", "pxmart", "convenience", "bill", "parking", "fast_food", "tax", "fine"],
+      "exclusions_url": "https://www.taishinbank.com.tw/TSB/personal/credit/intro/rights/notice/restricteditems/"
+    },
+    {
+      "card_id": "jko_card", "bank": "台新銀行", "name": "街口卡",
+      "rounding": "round",
+      "rounding_note": "逐筆計算，四捨五入到個位數",
+      "exclusions": ["youtube", "spotify", "tiktok", "apple_media", "google_services", "investment", "stored_value", "pxmart", "convenience", "bill", "parking", "fast_food", "tax", "fine"],
+      "exclusions_url": "https://www.taishinbank.com.tw/TSB/personal/credit/intro/rights/notice/restricteditems/"
+    },
+    {
+      "card_id": "dawho", "bank": "永豐銀行", "name": "大戶卡（DAWHO）",
+      "rounding": "none",
+      "rounding_note": "依整月帳單合計計算，不逐筆取整",
+      "exclusions": ["tax", "fine", "fast_food", "drinks", "parking", "pxmart", "convenience", "investment", "stored_value"],
+      "exclusions_url": "https://bank.sinopac.com/sinopacBT/personal/credit-card/introduction/bankcard/DAWHO.html#list2"
+    }
   ]
 }

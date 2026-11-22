@@ -97,3 +97,22 @@ test('recommend：上限封頂後可能被其他卡超越', () => {
   assert.equal(res[0].total, 300);
   assert.equal(res[1].total, 100);
 });
+
+test('roundPayout：floor／round／none', async () => {
+  const { roundPayout } = await import('../docs/js/lib/rewards.js');
+  assert.equal(roundPayout(0.033 * 1000, 'floor'), 33, '浮點誤差不能捨成 32');
+  assert.equal(roundPayout(9.9, 'floor'), 9);
+  assert.equal(roundPayout(3.5, 'round'), 4);
+  assert.equal(roundPayout(0.35, 'round'), 0);
+  assert.equal(roundPayout(0.35, 'none'), 0.35);
+  assert.equal(roundPayout(0.35, undefined), 0.35);
+});
+
+test('卡片層級排除：規則明確列出該店時不套用', () => {
+  const card = { card_id: 'a', exclusions: ['convenience'] };
+  const ctx = { date: '2026-11-22', merchantId: '7-11', categories: ['convenience'], paymentMethod: 'any' };
+  assert.equal(ruleApplies({ conditions: {} }, ctx, card).reason, 'card_excluded');
+  assert.equal(ruleApplies({ conditions: { merchant_categories: ['convenience'] } }, ctx, card).reason, 'card_excluded');
+  assert.equal(ruleApplies({ conditions: { merchants: ['7-11'] } }, ctx, card).ok, true);
+  assert.equal(ruleApplies({ conditions: {} }, ctx).ok, true, '沒帶卡片就不檢查');
+});

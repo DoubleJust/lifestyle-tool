@@ -198,7 +198,22 @@ export async function mount(view) {
           )) : null
         )
       )),
+      cardFooter(r),
       r.stale ? h('p', { class: 'status warn' }, '部分規則超過 90 天未核對，可能已變動。') : null
     );
+  }
+
+  // 卡片層級的說明：計算方式、取整造成的差額、不回饋項目連結
+  function cardFooter(r) {
+    const tags = [];
+    if (Math.abs(r.roundedAway) >= 0.005) {
+      tags.push(h('span', { class: `tag ${r.roundedAway > 0 ? 'bad' : ''}` },
+        `這筆 ${money(r.exactTotal)} → ${r.card.rounding === 'floor' ? '捨去' : '四捨五入'}成 ${money(r.payout)}`));
+    }
+    if (r.card.rounding_note) tags.push(h('span', { class: 'tag' }, r.card.rounding_note));
+    if (r.card.exclusions_url) {
+      tags.push(h('a', { class: 'tag', href: r.card.exclusions_url, target: '_blank', rel: 'noopener' }, '不回饋項目'));
+    }
+    return tags.length ? h('div', { class: 'tags card-foot' }, tags) : null;
   }
 }

@@ -114,28 +114,55 @@
     {
       "rule_id": "jko_bill", "card_id": "jko_card", "name": "繳費",
       "valid_until": "2026-12-31",
-      "conditions": { "merchant_categories": ["bill"] },
+      "conditions": { "merchant_categories": ["bill"], "merchants": ["bill_payment"] },
       "reward": { "rate": 0.0015, "type": "cash" },
       "stacking_group": "jko", "last_verified": "2026-11-22"
     },
+    {
+      "rule_id": "jko_apple_media", "card_id": "jko_card", "name": "Apple 媒體服務（街口支付）",
+      "conditions": { "merchants": ["apple_media"], "payment_methods": ["jko_pay"] },
+      "reward": { "rate": 0.01, "type": "cash", "no_cap": true },
+      "notes": ["台新不回饋項目的例外：其他支付方式不回饋"],
+      "stacking_group": "jko", "last_verified": "2026-11-23",
+      "source_url": "https://www.taishinbank.com.tw/TSB/personal/credit/intro/rights/notice/restricteditems/"
+    },
 
     {
-      "rule_id": "dawho_domestic", "card_id": "dawho", "name": "國內一般消費",
+      "rule_id": "dawho_base_domestic", "card_id": "dawho", "name": "基本回饋 國內",
       "valid_until": "2026-12-31",
       "conditions": {},
-      "exclusions": ["overseas", "tax", "fine", "fast_food", "drinks", "parking", "pxmart", "convenience", "investment"],
-      "reward": { "rate": 0.035, "type": "cash", "spend_cap": 16000, "cap_period": "month" },
-      "notes": ["刷 LINE Pay 也算", "不含稅款、罰款、速食、手搖飲、停車費、全聯、超商、分期付款"],
-      "stacking_group": "dawho", "last_verified": "2026-11-22"
+      "exclusions": ["overseas"],
+      "reward": { "rate": 0.01, "type": "cash", "no_cap": true },
+      "notes": ["刷 LINE Pay 也算", "不含分期付款"],
+      "stacking_group": "dawho_base", "last_verified": "2026-11-23",
+      "source_url": "https://bank.sinopac.com/sinopacBT/personal/credit-card/introduction/bankcard/DAWHO.html#list2"
     },
     {
-      "rule_id": "dawho_overseas", "card_id": "dawho", "name": "國外一般消費",
+      "rule_id": "dawho_base_overseas", "card_id": "dawho", "name": "基本回饋 國外",
       "valid_until": "2026-12-31",
       "conditions": { "merchant_categories": ["overseas"] },
-      "exclusions": ["investment", "tax", "fine"],
-      "reward": { "rate": 0.045, "type": "cash", "spend_cap": 16000, "cap_period": "month" },
-      "notes": ["不含分期付款"],
-      "stacking_group": "dawho", "last_verified": "2026-11-22"
+      "reward": { "rate": 0.02, "type": "cash", "no_cap": true },
+      "notes": ["限外幣交易", "不含分期付款"],
+      "stacking_group": "dawho_base", "last_verified": "2026-11-23",
+      "source_url": "https://bank.sinopac.com/sinopacBT/personal/credit-card/introduction/bankcard/DAWHO.html#list2"
+    },
+    {
+      "rule_id": "dawho_task_bonus", "card_id": "dawho", "name": "指定任務加碼（大戶等級）",
+      "valid_until": "2026-12-31",
+      "conditions": {},
+      "reward": { "rate": 0.025, "type": "cash", "cap": 400, "cap_period": "month" },
+      "notes": ["約等於每月消費 NT$16,000", "不含保費代繳、分期付款"],
+      "stacking_group": "dawho_bonus", "last_verified": "2026-11-23",
+      "source_url": "https://bank.sinopac.com/sinopacBT/personal/credit-card/introduction/bankcard/DAWHO.html#list2"
+    },
+    {
+      "rule_id": "dawho_easycard", "card_id": "dawho", "name": "悠遊卡自動加值（大戶等級）",
+      "valid_until": "2026-12-31",
+      "conditions": { "merchants": ["easycard_autoload"] },
+      "reward": { "rate": 0.03, "type": "cash", "cap": 100, "cap_period": "month" },
+      "notes": ["不另享基本回饋與任務加碼"],
+      "stacking_group": "dawho_easycard", "last_verified": "2026-11-23",
+      "source_url": "https://bank.sinopac.com/sinopacBT/personal/credit-card/introduction/bankcard/DAWHO.html#list2"
     }
   ]
 }
