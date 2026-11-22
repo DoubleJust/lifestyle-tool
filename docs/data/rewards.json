@@ -111,21 +111,30 @@
       "reward": { "rate": 0.035, "type": "cash", "spend_cap": 400000, "cap_period": "month" },
       "stacking_group": "jko", "last_verified": "2026-11-22"
     },
+    {
+      "rule_id": "jko_bill", "card_id": "jko_card", "name": "繳費",
+      "valid_until": "2026-12-31",
+      "conditions": { "merchant_categories": ["bill"] },
+      "reward": { "rate": 0.0015, "type": "cash" },
+      "stacking_group": "jko", "last_verified": "2026-11-22"
+    },
 
     {
       "rule_id": "dawho_domestic", "card_id": "dawho", "name": "國內一般消費",
       "valid_until": "2026-12-31",
       "conditions": {},
-      "exclusions": ["overseas"],
+      "exclusions": ["overseas", "tax", "fine", "fast_food", "drinks", "parking", "pxmart", "convenience", "investment"],
       "reward": { "rate": 0.035, "type": "cash", "spend_cap": 16000, "cap_period": "month" },
-      "notes": ["刷 LINE Pay 也算"],
+      "notes": ["刷 LINE Pay 也算", "不含稅款、罰款、速食、手搖飲、停車費、全聯、超商、分期付款"],
       "stacking_group": "dawho", "last_verified": "2026-11-22"
     },
     {
       "rule_id": "dawho_overseas", "card_id": "dawho", "name": "國外一般消費",
       "valid_until": "2026-12-31",
       "conditions": { "merchant_categories": ["overseas"] },
+      "exclusions": ["investment", "tax", "fine"],
       "reward": { "rate": 0.045, "type": "cash", "spend_cap": 16000, "cap_period": "month" },
+      "notes": ["不含分期付款"],
       "stacking_group": "dawho", "last_verified": "2026-11-22"
     }
   ]

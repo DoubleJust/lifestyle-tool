@@ -47,7 +47,7 @@ test('ruleApplies：期間、通路、排除、支付方式、新戶', () => {
 });
 
 test('ruleReward：上限、最低消費、點數換算', () => {
-  assert.deepEqual(ruleReward({ reward: { rate: 0.03, cap: 200 } }, 1000), { value: 30, rate: 0.03, capped: false, belowMin: false });
+  assert.deepEqual(ruleReward({ reward: { rate: 0.03, cap: 200 } }, 1000), { value: 30, exact: 30, rate: 0.03, capped: false, belowMin: false });
   assert.equal(ruleReward({ reward: { rate: 0.03, cap: 200 } }, 10000).value, 200);
   assert.equal(ruleReward({ reward: { rate: 0.03, cap: 200 } }, 10000).capped, true);
   assert.equal(ruleReward({ reward: { rate: 0.04 }, conditions: { min_spend: 1000 } }, 999).value, 0);
@@ -70,6 +70,21 @@ test('recommend：同群組取最高、不同群組相加、依金額排序', ()
 
   const onlyB = recommend({ ...base, cards, rules, ownedIds: new Set(['b']) });
   assert.deepEqual(onlyB.map((r) => r.card.card_id), ['b']);
+});
+
+test('recommend：金額 1 元時回饋率不受四捨五入影響（3.5% 不能變 4%）', () => {
+  const rules = [{ rule_id: 'a', card_id: 'a', name: '一般', conditions: {}, reward: { rate: 0.035 } }];
+  const res = recommend({ ...base, amount: 1, cards, rules });
+  assert.equal(Math.round(res[0].effectiveRate * 10000) / 100, 3.5);
+});
+
+test('recommend：回饋相同時依 cards 陣列順序', () => {
+  const rules = [
+    { rule_id: 'b', card_id: 'b', name: '一般', conditions: {}, reward: { rate: 0.035 } },
+    { rule_id: 'a', card_id: 'a', name: '一般', conditions: {}, reward: { rate: 0.035 } }
+  ];
+  assert.deepEqual(recommend({ ...base, cards, rules }).map((r) => r.card.card_id), ['a', 'b']);
+  assert.deepEqual(recommend({ ...base, cards: [...cards].reverse(), rules }).map((r) => r.card.card_id), ['b', 'a']);
 });
 
 test('recommend：上限封頂後可能被其他卡超越', () => {

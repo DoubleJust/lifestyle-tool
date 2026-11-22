@@ -28,7 +28,12 @@
     { "id": "cinema", "name": "電影院" },
     { "id": "karaoke", "name": "KTV" },
     { "id": "concert", "name": "演唱會門票" },
-    { "id": "tax", "name": "繳稅費" }
+    { "id": "fast_food", "name": "速食店" },
+    { "id": "bill", "name": "繳費（水電瓦斯、電信等）" },
+    { "id": "tax", "name": "繳稅" },
+    { "id": "fine", "name": "罰款" },
+    { "id": "parking", "name": "停車費" },
+    { "id": "investment", "name": "境外投資／匯款平台" }
   ],
   "merchants": [
     { "id": "jhanji", "name": "詹記麻辣火鍋", "aliases": ["詹記"], "categories": ["dining"] },
@@ -37,7 +42,10 @@
     { "id": "second_floor", "name": "貳樓", "aliases": ["貳樓餐廳", "Second Floor"], "categories": ["dining"] },
     { "id": "the_diner", "name": "樂子the Diner", "aliases": ["樂子", "the Diner"], "categories": ["dining"] },
     { "id": "cafe_acme", "name": "CAFE ACME", "aliases": ["ACME"], "categories": ["dining"] },
-    { "id": "mcdonalds", "name": "麥當勞", "aliases": ["McDonald's", "McDonalds", "麥當當"], "categories": ["dining"] },
+    { "id": "mcdonalds", "name": "麥當勞", "aliases": ["McDonald's", "McDonalds", "麥當當"], "categories": ["fast_food", "dining"] },
+    { "id": "kfc", "name": "肯德基", "aliases": ["KFC"], "categories": ["fast_food", "dining"] },
+    { "id": "mos", "name": "摩斯漢堡", "aliases": ["摩斯", "MOS Burger"], "categories": ["fast_food", "dining"] },
+    { "id": "burgerking", "name": "漢堡王", "aliases": ["Burger King"], "categories": ["fast_food", "dining"] },
     { "id": "sanshang", "name": "三商餐飲", "aliases": ["三商巧福", "三商"], "categories": ["dining"] },
     { "id": "eztable", "name": "EZTABLE", "aliases": ["簡單桌"], "categories": ["dining"] },
     { "id": "85c", "name": "85度C", "aliases": ["85°C", "85度"], "categories": ["drinks", "dining"] },
@@ -60,6 +68,7 @@
     { "id": "hilife", "name": "萊爾富", "aliases": ["Hi-Life"], "categories": ["convenience"] },
     { "id": "okmart", "name": "OK超商", "aliases": ["OK便利商店", "OKmart"], "categories": ["convenience"] },
 
+    { "id": "pxmart", "name": "全聯", "aliases": ["全聯福利中心", "PX Mart"], "categories": ["supermarket"] },
     { "id": "wanjiafu", "name": "萬家福", "aliases": [], "categories": ["supermarket"] },
     { "id": "lejiakang", "name": "樂家康", "aliases": [], "categories": ["supermarket"] },
     { "id": "donki", "name": "唐吉訶德", "aliases": ["DON DON DONKI", "唐吉", "驚安殿堂"], "categories": ["supermarket"] },
@@ -167,6 +176,12 @@
     { "id": "cashbox", "name": "錢櫃", "aliases": ["Cashbox"], "categories": ["karaoke"] },
     { "id": "holiday_ktv", "name": "好樂迪", "aliases": ["Holiday KTV"], "categories": ["karaoke"] },
     { "id": "superstar", "name": "星聚點", "aliases": ["Superstar KTV"], "categories": ["karaoke"] },
-    { "id": "concert_ticket", "name": "演唱會門票", "aliases": ["演唱會", "KKTIX", "拓元", "tixCraft"], "categories": ["concert"] }
+    { "id": "concert_ticket", "name": "演唱會門票", "aliases": ["演唱會", "KKTIX", "拓元", "tixCraft"], "categories": ["concert"] },
+
+    { "id": "bill_payment", "name": "繳費", "aliases": ["水費", "電費", "瓦斯費", "電信費", "手機費", "管理費", "學費"], "categories": ["bill"] },
+    { "id": "tax_payment", "name": "繳稅", "aliases": ["稅款", "所得稅", "牌照稅", "燃料稅", "房屋稅", "地價稅"], "categories": ["tax"] },
+    { "id": "fine_payment", "name": "罰款", "aliases": ["罰單", "交通罰單"], "categories": ["fine"] },
+    { "id": "parking_fee", "name": "停車費", "aliases": ["停車場", "路邊停車"], "categories": ["parking"] },
+    { "id": "overseas_remit", "name": "境外投資／匯款", "aliases": ["海外券商", "國際匯款", "匯款"], "categories": ["investment"] }
   ]
 }

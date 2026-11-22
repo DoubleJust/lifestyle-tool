@@ -1,7 +1,9 @@
 import { h, card, setStatus } from '../ui.js';
 import { call, ApiError } from '../api.js';
 import { get, set } from '../store.js';
-import { findMerchants, recommend, PAYMENT_METHODS } from '../lib/rewards.js';
+import { findMerchantsScored, recommend, PAYMENT_METHODS } from '../lib/rewards.js';
+
+const MAX_CHOICES = 8;            // 店名比對到多個通路時，最多列幾個按鈕
 
 const MY_CARDS_KEY = 'myCards';   // localStorage 快取：{ ids: [...], at: ISO 時間 }
 
@@ -26,7 +28,7 @@ function todayTaipei() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date());
 }
 
-const money = (n) => `NT$${n.toLocaleString('zh-TW', { maximumFractionDigits: n < 100 ? 1 : 0 })}`;
+const money = (n) => `NT$${n.toLocaleString('zh-TW', { maximumFractionDigits: n < 10 ? 2 : n < 100 ? 1 : 0 })}`;
 const pct = (r) => `${(r * 100).toLocaleString('zh-TW', { maximumFractionDigits: 2 })}%`;
 
 export async function mount(view) {
@@ -74,12 +76,15 @@ export async function mount(view) {
   );
 
   const matchInfo = h('p', { class: 'muted', role: 'status' });
+  const chooser = h('div', { class: 'chooser', hidden: true });
   const results = h('div', { id: 'results' });
+  let pickedId = null;   // 使用者在按鈕中選的通路；改店名時清除
   const demoNote = cards.some((c) => c.card_id.startsWith('demo_'))
     ? card(null, h('p', { class: 'status warn' }, '目前是範例資料，數字都是虛構的。匯入你的回饋規則後才會顯示真實卡片。'))
     : null;
 
-  view.append(...[demoNote, form, matchInfo, results].filter(Boolean));
+  view.append(...[demoNote, form, chooser, matchInfo, results].filter(Boolean));
+  nameInput.addEventListener('input', () => { pickedId = null; });
 
   // ── 持有的卡：先用快取，背景向後端更新 ──
   let owned = cachedMyCards();
@@ -119,17 +124,16 @@ export async function mount(view) {
     set('cards.amount', String(amount));
 
     const query = nameInput.value.trim();
-    const found = query ? findMerchants(query, merchants) : [];
-    const merchant = found[0] || null;
+    const found = query ? findMerchantsScored(query, merchants).map((s) => s.m) : [];
+    const merchant = found.find((m) => m.id === pickedId) || found[0] || null;
+    renderChooser(catSelect.value ? [] : found, merchant);
     let cats;
     if (catSelect.value) {
       cats = [catSelect.value];
       matchInfo.textContent = `類別：${catName[catSelect.value]}（手動選擇）`;
     } else if (merchant) {
       cats = merchant.categories;
-      const others = found.slice(1, 3).map((m) => m.name);
-      matchInfo.textContent = `比對到「${merchant.name}」→ ${cats.map((c) => catName[c] || c).join('、')}` +
-        (others.length ? `（也可能是：${others.join('、')}）` : '');
+      matchInfo.textContent = `比對到「${merchant.name}」→ ${cats.map((c) => catName[c] || c).join('、')}`;
     } else {
       cats = [];
       matchInfo.textContent = query
@@ -150,6 +154,25 @@ export async function mount(view) {
     results.replaceChildren(...(list.length ? list.map(renderResult) : [
       card(null, h('p', { class: 'muted' }, '沒有適用的卡片。'))
     ]));
+  }
+
+  // 店名比對到 2 個以上通路時，列出按鈕讓使用者選
+  function renderChooser(found, selected) {
+    if (found.length < 2) { chooser.hidden = true; chooser.replaceChildren(); return; }
+    const shown = found.slice(0, MAX_CHOICES);
+    chooser.replaceChildren(...[
+      h('div', { class: 'muted' }, `「${nameInput.value.trim()}」對到 ${found.length} 個通路，請選擇：`),
+      h('div', { class: 'choices' }, shown.map((m) =>
+        h('button', {
+          type: 'button',
+          class: m === selected ? 'choice active' : 'choice',
+          'aria-pressed': m === selected ? 'true' : 'false',
+          onclick: () => { pickedId = m.id; run(); }
+        }, m.name)
+      )),
+      found.length > MAX_CHOICES ? h('div', { class: 'muted' }, `還有 ${found.length - MAX_CHOICES} 個，請輸入更完整的店名。`) : null
+    ].filter(Boolean)); // replaceChildren 會把 null 變成文字，要先濾掉
+    chooser.hidden = false;
   }
 
   function renderResult(r, i) {

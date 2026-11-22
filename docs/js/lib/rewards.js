@@ -1,17 +1,18 @@
 // 信用卡回饋計算引擎（純函式，不碰 DOM，可在 Node 直接測試）。
 
+// 順序 = 下拉選單順序（常用的排前面）
 export const PAYMENT_METHODS = [
   { id: 'any', name: '不指定' },
   { id: 'physical', name: '實體卡' },
   { id: 'apple_pay', name: 'Apple Pay' },
-  { id: 'google_pay', name: 'Google Pay' },
-  { id: 'samsung_pay', name: 'Samsung Pay' },
   { id: 'line_pay', name: 'LINE Pay' },
   { id: 'taishin_pay', name: '台新 Pay' },
   { id: 'jko_pay', name: '街口支付' },
+  { id: 'online', name: '網路刷卡' },
+  { id: 'google_pay', name: 'Google Pay' },
+  { id: 'samsung_pay', name: 'Samsung Pay' },
   { id: 'pi_wallet', name: 'Pi 拍錢包' },
-  { id: 'taiwan_pay', name: '台灣 Pay' },
-  { id: 'online', name: '網路刷卡' }
+  { id: 'taiwan_pay', name: '台灣 Pay' }
 ];
 const PAYMENT_NAME = Object.fromEntries(PAYMENT_METHODS.map((p) => [p.id, p.name]));
 const CAP_PERIOD_NAME = { month: '每月', quarter: '每季', year: '每年', campaign: '活動期間' };
@@ -29,6 +30,11 @@ export function normalize(s) {
 
 /** 依店名找商家，回傳依相似度排序的 merchant 陣列 */
 export function findMerchants(query, merchants) {
+  return findMerchantsScored(query, merchants).map((s) => s.m);
+}
+
+/** 同 findMerchants，但保留分數：100 完全相符、70 開頭相符、50 部分相符 */
+export function findMerchantsScored(query, merchants) {
   const q = normalize(query);
   if (!q) return [];
   const scored = [];
@@ -43,7 +49,7 @@ export function findMerchants(query, merchants) {
     }
     if (score > 0) scored.push({ m, score });
   }
-  return scored.sort((a, b) => b.score - a.score).map((s) => s.m);
+  return scored.sort((a, b) => b.score - a.score);
 }
 
 function daysBetween(a, b) {
@@ -98,7 +104,8 @@ export function ruleReward(rule, amount) {
   let value = belowMin ? 0 : base * rate * pv;
   // cap：每期「回饋金額」上限
   if (typeof r.cap === 'number' && value > r.cap) { value = r.cap; capped = true; }
-  return { value: Math.round(value * 100) / 100, rate: rate * pv, capped, belowMin };
+  // exact 用來比較與算回饋率；value 只是顯示用的四捨五入（金額很小時兩者差很多，例如 1 元）
+  return { value: Math.round(value * 100) / 100, exact: value, rate: rate * pv, capped, belowMin };
 }
 
 /** 規則的條件標籤（顯示用） */
@@ -136,6 +143,7 @@ export function ruleTags(rule, { capped = false, belowMin = false } = {}) {
 export function recommend(input) {
   const { cards, rules, amount, date, ownedIds = null } = input;
   const cardById = new Map(cards.map((c) => [c.card_id, c]));
+  const cardOrder = new Map(cards.map((c, i) => [c.card_id, i])); // 回饋相同時依 cards.json 的順序
   const perCard = new Map();
 
   for (const rule of rules) {
@@ -146,16 +154,17 @@ export function recommend(input) {
     const group = rule.stacking_group || 'default';
     const entry = perCard.get(rule.card_id) || new Map();
     const prev = entry.get(group);
-    const better = !prev || rw.value > prev.reward.value ||
-      (rw.value === prev.reward.value && (rule.priority || 0) > (prev.rule.priority || 0));
+    const better = !prev || rw.exact > prev.reward.exact ||
+      (rw.exact === prev.reward.exact && (rule.priority || 0) > (prev.rule.priority || 0));
     if (better) entry.set(group, { rule, reward: rw });
     perCard.set(rule.card_id, entry);
   }
 
   const results = [];
   for (const [cardId, groups] of perCard) {
-    const parts = [...groups.values()]
-      .sort((a, b) => b.reward.value - a.reward.value)
+    const picked = [...groups.values()].sort((a, b) => b.reward.exact - a.reward.exact);
+    const exactTotal = picked.reduce((s, p) => s + p.reward.exact, 0);
+    const parts = picked
       .map(({ rule, reward }) => ({
         rule_id: rule.rule_id,
         name: rule.name,
@@ -165,15 +174,18 @@ export function recommend(input) {
         source_url: rule.source_url || null,
         stale: !rule.last_verified || daysBetween(rule.last_verified, date) > STALE_DAYS
       }));
-    const total = Math.round(parts.reduce((s, p) => s + p.value, 0) * 100) / 100;
     results.push({
       card: cardById.get(cardId),
-      total,
-      effectiveRate: amount > 0 ? total / amount : 0,
+      total: Math.round(exactTotal * 100) / 100,
+      exactTotal,
+      effectiveRate: amount > 0 ? exactTotal / amount : 0,
       parts,
       stale: parts.some((p) => p.stale)
     });
   }
 
-  return results.sort((a, b) => b.total - a.total || a.card.name.localeCompare(b.card.name, 'zh-Hant'));
+  // 依回饋率排序（金額相同所以等同依回饋金額）；浮點誤差內視為相同，再依 cards.json 順序
+  return results.sort((a, b) =>
+    (Math.abs(b.exactTotal - a.exactTotal) > 1e-9 ? b.exactTotal - a.exactTotal : 0) ||
+    cardOrder.get(a.card.card_id) - cardOrder.get(b.card.card_id));
 }

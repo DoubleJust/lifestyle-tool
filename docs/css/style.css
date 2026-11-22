@@ -131,6 +131,13 @@ label.check { display: flex; align-items: center; gap: 8px; color: var(--fg); fo
 label.check input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
 label.check:has(input:disabled) { color: var(--muted); }
 
+/* 店名比對到多個通路時的選擇按鈕 */
+.chooser { margin: 0 0 12px; }
+.chooser[hidden] { display: none; }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+button.choice { min-height: 36px; padding: 6px 12px; border-radius: 999px; font-size: 14px; }
+button.choice.active { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+
 /* 信用卡推薦結果 */
 .result.best { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .result-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
