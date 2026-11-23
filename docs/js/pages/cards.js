@@ -4,6 +4,8 @@ import { get, set } from '../store.js';
 import { findMerchantsScored, recommend, PAYMENT_METHODS } from '../lib/rewards.js';
 
 const MAX_CHOICES = 8;            // 店名比對到多個通路時，最多列幾個按鈕
+const MAIN_PAYMENTS = 7;          // 支付方式先顯示前幾個，其餘收在「更多」
+const TYPE_DELAY_MS = 250;        // 打字時延遲多久才重新計算
 
 const MY_CARDS_KEY = 'myCards';   // localStorage 快取：{ ids: [...], at: ISO 時間 }
 
@@ -47,35 +49,61 @@ export async function mount(view) {
   const catName = Object.fromEntries(categories.map((c) => [c.id, c.name]));
 
   // ── 輸入區 ──
-  const nameInput = h('input', { id: 'merchant', type: 'text', list: 'merchant-list', autocomplete: 'off', placeholder: '例如：全聯、Uber Eats、蝦皮', enterkeyhint: 'search' });
+  const nameInput = h('input', {
+    id: 'merchant', type: 'text', list: 'merchant-list', autocomplete: 'off',
+    placeholder: '店名，例如：全聯、Uber Eats', enterkeyhint: 'search', 'aria-label': '店名'
+  });
   const datalist = h('datalist', { id: 'merchant-list' }, merchants.map((m) => h('option', { value: m.name })));
-  const amountInput = h('input', { id: 'amount', type: 'number', inputmode: 'numeric', min: '1', step: '1', value: get('cards.amount', '1000') });
-  const paySelect = h('select', { id: 'pay' }, PAYMENT_METHODS.map((p) => h('option', { value: p.id }, p.name)));
-  paySelect.value = get('cards.pay', 'any');
-  const catSelect = h('select', { id: 'category' },
-    h('option', { value: '' }, '自動判斷（依店名）'),
+  const amountInput = h('input', {
+    id: 'amount', type: 'number', inputmode: 'numeric', min: '1', step: '1',
+    value: get('cards.amount', '1000'), 'aria-label': '金額（估算用）'
+  });
+
+  // 支付方式：chip 按鈕（單選）
+  let pay = get('cards.pay', 'any');
+  if (!PAYMENT_METHODS.some((p) => p.id === pay)) pay = 'any';
+  const payButtons = PAYMENT_METHODS.map((p, i) => h('button', {
+    type: 'button', class: 'chip', 'data-pay': p.id, hidden: i >= MAIN_PAYMENTS,
+    onclick: () => { pay = p.id; set('cards.pay', pay); syncPay(); if (hasQuery()) run(); }
+  }, p.name));
+  const moreBtn = h('button', { type: 'button', class: 'chip more', onclick: () => {
+    payButtons.forEach((b) => { b.hidden = false; });
+    moreBtn.hidden = true;
+  } }, '更多…');
+  function syncPay() {
+    for (const b of payButtons) b.setAttribute('aria-pressed', b.dataset.pay === pay ? 'true' : 'false');
+  }
+  if (PAYMENT_METHODS.findIndex((p) => p.id === pay) >= MAIN_PAYMENTS) moreBtn.click();
+  syncPay();
+
+  const catSelect = h('select', { id: 'category', 'aria-label': '類別' },
+    h('option', { value: '' }, '類別：依店名判斷'),
     categories.map((c) => h('option', { value: c.id }, c.name))
   );
   const holidayBox = h('input', { id: 'holiday', type: 'checkbox' });
-  const holidayLabel = h('label', { for: 'holiday', class: 'check' }, holidayBox, ' 今天是國定假日');
   const ownedBox = h('input', { id: 'owned', type: 'checkbox' });
-  const ownedLabel = h('label', { for: 'owned', class: 'check' }, ownedBox, ' 只看我持有的卡');
-  const ownedNote = h('p', { class: 'muted' });
-  const searchBtn = h('button', { type: 'submit', class: 'primary' }, '推薦');
+  const ownedNote = h('p', { class: 'form-note' });
 
-  const form = h('form', { class: 'card', onsubmit: (e) => { e.preventDefault(); run(); } },
-    h('label', { for: 'merchant' }, '店名'), nameInput, datalist,
-    h('div', { class: 'grid2' },
-      h('div', {}, h('label', { for: 'amount' }, '金額（估算用）'), amountInput),
-      h('div', {}, h('label', { for: 'pay' }, '支付方式'), paySelect)
+  const form = h('form', { class: 'card', role: 'search', onsubmit: (e) => {
+    e.preventDefault();
+    nameInput.blur();   // 收起手機鍵盤
+    run();
+  } },
+    h('div', { class: 'search-row' },
+      h('span', { class: 'icon', 'aria-hidden': 'true' }, '🔍'),
+      nameInput, datalist,
+      h('label', { class: 'amount-pill', for: 'amount' }, 'NT$', amountInput)
     ),
-    h('label', { for: 'category' }, '類別'), catSelect,
-    holidayLabel,
-    ownedLabel, ownedNote,
-    h('div', { class: 'row' }, searchBtn)
+    h('div', { class: 'chips', role: 'group', 'aria-label': '支付方式' }, payButtons, moreBtn),
+    h('div', { class: 'opts' },
+      h('label', { for: 'owned', class: 'check' }, ownedBox, '只看我的卡'),
+      h('label', { for: 'holiday', class: 'check' }, holidayBox, '今天是國定假日'),
+      catSelect
+    ),
+    ownedNote
   );
 
-  const matchInfo = h('p', { class: 'muted', role: 'status' });
+  const matchInfo = h('p', { class: 'match', role: 'status' });
   const chooser = h('div', { class: 'chooser', hidden: true });
   const results = h('div', { id: 'results' });
   let pickedId = null;   // 使用者在按鈕中選的通路；改店名時清除
@@ -83,8 +111,13 @@ export async function mount(view) {
     ? card(null, h('p', { class: 'status warn' }, '目前是範例資料，數字都是虛構的。匯入你的回饋規則後才會顯示真實卡片。'))
     : null;
 
-  view.append(...[demoNote, form, chooser, matchInfo, results].filter(Boolean));
-  nameInput.addEventListener('input', () => { pickedId = null; });
+  view.append(...[demoNote, form, matchInfo, chooser, results].filter(Boolean));
+
+  const hasQuery = () => results.childElementCount > 0 || nameInput.value.trim() !== '';
+  let typeTimer = 0;
+  const runSoon = () => { clearTimeout(typeTimer); typeTimer = setTimeout(run, TYPE_DELAY_MS); };
+  nameInput.addEventListener('input', () => { pickedId = null; runSoon(); });
+  amountInput.addEventListener('input', () => { if (hasQuery()) runSoon(); });
 
   // ── 持有的卡：先用快取，背景向後端更新 ──
   let owned = cachedMyCards();
@@ -112,13 +145,13 @@ export async function mount(view) {
       : `無法取得持有卡片清單：${err.message ?? err}，先顯示所有卡。`;
   });
 
-  ownedBox.addEventListener('change', () => { set('cards.onlyOwned', ownedBox.checked ? '1' : '0'); if (results.childElementCount) run(); });
-  paySelect.addEventListener('change', () => { set('cards.pay', paySelect.value); if (results.childElementCount) run(); });
-  catSelect.addEventListener('change', () => { if (results.childElementCount || nameInput.value.trim()) run(); });
-  holidayBox.addEventListener('change', () => { if (results.childElementCount) run(); });
+  ownedBox.addEventListener('change', () => { set('cards.onlyOwned', ownedBox.checked ? '1' : '0'); if (hasQuery()) run(); });
+  catSelect.addEventListener('change', () => { if (hasQuery() || catSelect.value) run(); });
+  holidayBox.addEventListener('change', () => { if (hasQuery()) run(); });
 
   // ── 計算並顯示 ──
   function run() {
+    clearTimeout(typeTimer);
     const amount = Math.round(Number(amountInput.value));
     if (!(amount > 0)) { matchInfo.textContent = '請輸入大於 0 的金額。'; results.replaceChildren(); return; }
     set('cards.amount', String(amount));
@@ -130,10 +163,10 @@ export async function mount(view) {
     let cats;
     if (catSelect.value) {
       cats = [catSelect.value];
-      matchInfo.textContent = `類別：${catName[catSelect.value]}（手動選擇）`;
+      matchInfo.replaceChildren('類別 ', h('b', {}, catName[catSelect.value]), '（手動選擇）');
     } else if (merchant) {
       cats = merchant.categories;
-      matchInfo.textContent = `比對到「${merchant.name}」→ ${cats.map((c) => catName[c] || c).join('、')}`;
+      matchInfo.replaceChildren('比對到 ', h('b', {}, merchant.name), ` → ${cats.map((c) => catName[c] || c).join('、')}`);
     } else {
       cats = [];
       matchInfo.textContent = query
@@ -146,7 +179,7 @@ export async function mount(view) {
       date: todayTaipei(),
       merchantId: catSelect.value ? null : merchant?.id ?? null,
       categories: cats,
-      paymentMethod: paySelect.value,
+      paymentMethod: pay,
       isHoliday: holidayBox.checked,
       ownedIds: ownedBox.checked && owned?.ids?.length ? new Set(owned.ids) : null
     });
@@ -176,26 +209,28 @@ export async function mount(view) {
   }
 
   function renderResult(r, i) {
-    return h('article', { class: `card result${i === 0 ? ' best' : ''}` },
+    const tag = (t) => t.href
+      ? h('a', { class: `tag ${t.kind}`.trim(), href: t.href, target: '_blank', rel: 'noopener' }, t.text)
+      : h('span', { class: `tag ${t.kind}`.trim() }, t.text);
+    return h('article', { class: `result rank-${(i % 3) + 1}` },
       h('div', { class: 'result-head' },
         h('div', {},
-          h('div', { class: 'result-name' }, i === 0 ? '🏆 ' : '', r.card.name),
-          h('div', { class: 'muted' }, r.card.bank)
+          h('span', { class: 'rank-badge' }, i === 0 ? '🏆 最推薦' : `第 ${i + 1} 名`),
+          h('div', { class: 'result-name' }, r.card.name),
+          h('div', { class: 'result-bank' }, r.card.bank)
         ),
         h('div', { class: 'result-total' },
-          h('div', { class: 'amount' }, pct(r.effectiveRate)),
-          h('div', { class: 'muted' }, `約 ${money(r.total)}`)
+          h('div', { class: 'pct' }, pct(r.effectiveRate)),
+          h('div', { class: 'money' }, `約 ${money(r.total)}`)
         )
       ),
-      h('ul', { class: 'parts' }, r.parts.map((p) =>
-        h('li', {},
-          h('div', {}, `${p.name}　${pct(p.rate)}`,
-            p.source_url ? [' ', h('a', { href: p.source_url, target: '_blank', rel: 'noopener' }, '官方說明')] : null),
-          p.tags.length ? h('div', { class: 'tags' }, p.tags.map((t) =>
-            t.href
-              ? h('a', { class: `tag ${t.kind}`, href: t.href, target: '_blank', rel: 'noopener' }, t.text)
-              : h('span', { class: `tag ${t.kind}` }, t.text)
-          )) : null
+      h('div', { class: 'parts' }, r.parts.map((p) =>
+        h('div', { class: 'part' },
+          h('div', { class: 'part-name' },
+            h('span', {}, `${p.name}　${pct(p.rate)}`),
+            p.source_url ? h('a', { href: p.source_url, target: '_blank', rel: 'noopener' }, '官方說明 ›') : null
+          ),
+          p.tags.length ? h('div', { class: 'tags' }, p.tags.map(tag)) : null
         )
       )),
       cardFooter(r),
@@ -207,13 +242,13 @@ export async function mount(view) {
   function cardFooter(r) {
     const tags = [];
     if (Math.abs(r.roundedAway) >= 0.005) {
-      tags.push(h('span', { class: `tag ${r.roundedAway > 0 ? 'bad' : ''}` },
+      tags.push(h('span', { class: `tag ${r.roundedAway > 0 ? 'bad' : ''}`.trim() },
         `這筆 ${money(r.exactTotal)} → ${r.card.rounding === 'floor' ? '捨去' : '四捨五入'}成 ${money(r.payout)}`));
     }
     if (r.card.rounding_note) tags.push(h('span', { class: 'tag' }, r.card.rounding_note));
     if (r.card.exclusions_url) {
-      tags.push(h('a', { class: 'tag', href: r.card.exclusions_url, target: '_blank', rel: 'noopener' }, '不回饋項目'));
+      tags.push(h('a', { class: 'tag', href: r.card.exclusions_url, target: '_blank', rel: 'noopener' }, '不回饋項目 ›'));
     }
-    return tags.length ? h('div', { class: 'tags card-foot' }, tags) : null;
+    return tags.length ? h('div', { class: 'result-foot' }, tags) : null;
   }
 }

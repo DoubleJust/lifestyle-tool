@@ -140,12 +140,12 @@ export function ruleTags(rule, { capped = false, belowMin = false } = {}) {
   if (typeof c.min_spend === 'number') tags.push({ text: `單筆滿 NT$${c.min_spend.toLocaleString()}`, kind: belowMin ? 'bad' : '' });
   const period = CAP_PERIOD_NAME[r.cap_period] || '每期';
   if (typeof r.spend_cap === 'number') {
-    tags.push({ text: `${period}消費上限 NT$${r.spend_cap.toLocaleString()}`, kind: capped ? 'bad' : '' });
+    tags.push({ text: `${period}消費上限 NT$${r.spend_cap.toLocaleString()}`, kind: capped ? 'bad' : 'key' });
   }
   if (typeof r.cap === 'number') {
-    tags.push({ text: `${period}回饋上限 NT$${r.cap.toLocaleString()}`, kind: capped ? 'bad' : '' });
+    tags.push({ text: `${period}回饋上限 NT$${r.cap.toLocaleString()}`, kind: capped ? 'bad' : 'key' });
   }
-  if (r.no_cap) tags.push({ text: '無上限', kind: '' });
+  if (r.no_cap) tags.push({ text: '無上限', kind: 'key' });
   if (r.type === 'points') tags.push({ text: `點數（1 點≈NT$${Number(r.point_value) || 1}）`, kind: '' });
   if (r.type === 'discount') tags.push({ text: '折抵', kind: '' });
   for (const n of rule.notes || []) tags.push({ text: n, kind: '' });

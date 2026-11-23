@@ -2,7 +2,7 @@
 import { initServiceWorker } from './sw-client.js';
 
 const ROUTES = {
-  cards:    { title: '信用卡推薦', load: () => import('./pages/cards.js') },
+  cards:    { title: '今天刷哪張？', load: () => import('./pages/cards.js') },
   flights:  { title: '機票',       load: () => import('./pages/flights.js') },
   events:   { title: '台北／桃園活動', load: () => import('./pages/events.js') },
   places:   { title: '附近店家',   load: () => import('./pages/places.js') },
