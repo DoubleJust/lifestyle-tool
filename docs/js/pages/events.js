@@ -8,16 +8,21 @@ import {
   PRESETS, DAYS, presetRange, customRange, rangeLabel, dayLabel, weekday, showTime, cityName,
   filterEvents, groupByDay, safeUrl, todayTaipei, addDays
 } from '../lib/events.js';
+import { createResultCache, loadPrefs, savePrefs, loadFavData, saveFavData } from '../lib/eventcache.js';
 
 const CITIES = [{ id: 'all', name: '全部' }, { id: '臺北', name: '台北' }, { id: '桃園', name: '桃園' }];
 const MAX_SHOW_TAGS = 8;           // 多場次時最多列幾個場次
 const SNAPSHOT_SHOWS = 10;         // 收藏時送給後端的場次數（後端也限制 10）
 const SEARCH_TIMEOUT_MS = 40000;   // 每天第一次查詢要下載整份文化部資料，給長一點
 const UNDO_MS = 6000;
+const PREFS_SYNC_MS = 30 * 60 * 1000;   // 收藏／移除狀態超過 30 分鐘沒和後端同步，就在背景同步一次
 
-// 本次開啟 App 期間保留：切換分頁回來不用重查
-const cache = new Map();                                  // `${start}|${endExclusive}` → 後端結果
-const prefs = { favs: new Set(), hidden: new Set() };     // 以後端為準，操作時先樂觀更新
+// 查詢結果：記憶體（本次開啟期間）＋ localStorage（重開 App 也在，最多 5 個期間）
+const cache = new Map();                  // `${start}|${endExclusive}` → 後端結果
+const stored = createResultCache();
+// 收藏／移除狀態：以後端為準，操作時先樂觀更新，並存一份在本機
+const prefs = loadPrefs();
+const persistPrefs = () => savePrefs(prefs);
 
 let toastEl = null;
 let toastTimer = 0;
@@ -43,6 +48,9 @@ export function mount(view, opts = {}) {
   let cat = 'all';
   let data = null;
   let seq = 0;
+  let updating = false;     // 正在背景更新本機存的舊結果
+  let updateError = '';     // 背景更新失敗的原因（仍顯示舊結果）
+  stored.prune(today);
 
   // ── 上方切換：找活動｜收藏 ──
   const modeSearch = h('button', { type: 'button', class: 'chip', onclick: () => setMode('search') }, '找活動');
@@ -135,23 +143,37 @@ export function mount(view, opts = {}) {
     const key = `${range.start}|${range.endExclusive}`;
     const my = ++seq;
     cat = 'all';
-    if (cache.has(key)) { data = cache.get(key); setStatus(status, '', ''); render(); return; }
+    updating = false;
+    updateError = '';
+    if (cache.has(key)) { data = cache.get(key); render(); return; }
 
-    data = null;
-    clearOutput();
-    setStatus(status, `查詢 ${rangeLabel(range)} 的活動中…（每天第一次查詢要下載文化部資料，約需 10 秒）`, '');
+    // 先顯示本機存的結果；是今天的資料就不用再向後端要
+    const saved = stored.get(key);
+    if (saved) {
+      data = saved.data;
+      if (data.fetched === today && !data.stale) { cache.set(key, data); render(); return; }
+      updating = true;
+      render();
+    } else {
+      data = null;
+      clearOutput();
+      setStatus(status, `查詢 ${rangeLabel(range)} 的活動中…（每天第一次查詢要下載文化部資料，約需 10 秒）`, '');
+    }
     try {
       const d = await api('events.search', { start: range.start, endExclusive: range.endExclusive }, { timeoutMs: SEARCH_TIMEOUT_MS });
       if (my !== seq) return;
       cache.set(key, d);
-      if (Array.isArray(d.favUids)) prefs.favs = new Set(d.favUids);
+      stored.put(key, d);
+      if (Array.isArray(d.favUids)) { prefs.favs = new Set(d.favUids); persistPrefs(); }
       data = d;
-      setStatus(status, '', '');
+      updating = false;
       sync();
       if (mode === 'search') render();
     } catch (err) {
       if (my !== seq) return;
-      setStatus(status, errText(err, '查詢失敗'), 'bad');
+      updating = false;
+      if (data) { updateError = errText(err, '無法連線'); render(); }
+      else setStatus(status, errText(err, '查詢失敗'), 'bad');
     }
   }
 
@@ -165,9 +187,11 @@ export function mount(view, opts = {}) {
     const hiddenCount = (data.hiddenCount || 0) + localHidden;
 
     const warn = [];
-    if (data.stale) warn.push(`今天的資料更新失敗，顯示 ${data.fetched} 的資料。`);
+    if (updating) warn.push(`先顯示 ${data.fetched} 存在手機裡的資料，正在更新…`);
+    else if (updateError) warn.push(`無法更新（${updateError}），顯示 ${data.fetched} 存在手機裡的資料。`);
+    else if (data.stale) warn.push(`今天的資料更新失敗，顯示 ${data.fetched} 的資料。`);
     if (data.truncated) warn.push('結果太多，只列出前 300 個，請縮短期間。');
-    setStatus(status, warn.join(''), warn.length ? 'warn' : '');
+    setStatus(status, warn.join(''), warn.length && !updating ? 'warn' : '');
     setSourceNote(data.fetched);
 
     summary.replaceChildren(
@@ -205,24 +229,34 @@ export function mount(view, opts = {}) {
   }
 
   // ── 收藏頁 ──
-  let favData = null;
+  let favData = loadFavData();
   async function loadFavs() {
     const my = ++seq;
     clearOutput();
-    setStatus(status, '讀取收藏中…', '');
+    if (favData) { setStatus(status, '先顯示存在手機裡的收藏，正在更新…', ''); renderFavs(); }
+    else setStatus(status, '讀取收藏中…', '');
     try {
-      const d = await api('events.prefs', {}, { timeoutMs: SEARCH_TIMEOUT_MS });
-      if (my !== seq) return;
-      favData = d;
-      prefs.favs = new Set((d.favs || []).map((e) => e.uid));
-      prefs.hidden = new Set((d.hidden || []).map((e) => e.uid));
+      await syncPrefs();
+      if (my !== seq || mode !== 'favs') return;
       setStatus(status, '', '');
-      sync();
       renderFavs();
     } catch (err) {
       if (my !== seq) return;
-      setStatus(status, errText(err, '讀取收藏失敗'), 'bad');
+      setStatus(status, favData ? `無法更新收藏（${errText(err, '無法連線')}），顯示上次的資料。` : errText(err, '讀取收藏失敗'),
+        favData ? 'warn' : 'bad');
     }
+  }
+
+  /** 向後端取收藏清單與已移除清單（也是手機、電腦之間同步狀態的方式） */
+  async function syncPrefs() {
+    const d = await api('events.prefs', {}, { timeoutMs: SEARCH_TIMEOUT_MS });
+    favData = d;
+    saveFavData(d);
+    prefs.favs = new Set((d.favs || []).map((e) => e.uid));
+    prefs.hidden = new Set((d.hidden || []).map((e) => e.uid));
+    prefs.syncedAt = Date.now();
+    persistPrefs();
+    sync();
   }
 
   function renderFavs() {
@@ -268,7 +302,7 @@ export function mount(view, opts = {}) {
     const o = originalOf(ev.uid) || ev;
     return { uid: o.uid, title: o.title, cat: o.cat, catName: o.catName, url: o.url, src: o.src, shows: o.shows.slice(0, SNAPSHOT_SHOWS) };
   }
-  const rerender = () => { sync(); if (mode === 'favs') renderFavs(); else render(); };
+  const rerender = () => { persistPrefs(); sync(); if (mode === 'favs') renderFavs(); else render(); };
 
   async function savePref(uid, state, extra, undoLocal) {
     try {
@@ -320,6 +354,7 @@ export function mount(view, opts = {}) {
   function restoreHidden(x) {
     prefs.hidden.delete(x.uid);
     cache.clear();   // 後端查詢結果原本就不含已移除的活動，復原後要重查
+    stored.clear();
     data = null;
     rerender();
     showToast(`已復原「${short(x.title)}」`);
@@ -394,7 +429,15 @@ export function mount(view, opts = {}) {
   }
 
   sync();
-  if (mode === 'favs') loadFavs(); else start();
+  if (mode === 'favs') {
+    loadFavs();
+  } else {
+    start();
+    // 其他裝置的收藏／移除：超過 30 分鐘沒同步就在背景同步，完成後重畫
+    if (Date.now() - prefs.syncedAt > PREFS_SYNC_MS) {
+      syncPrefs().then(() => { if (mode === 'search') render(); }).catch(() => { /* 下次再試 */ });
+    }
+  }
 }
 
 export function unmount() {
