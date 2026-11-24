@@ -6,7 +6,7 @@
 ## 架構
 - 前端：`docs/`，純 HTML/CSS/ES modules，無建置步驟。GitHub Pages 從 `main` 的 `/docs` 發佈 → https://doublejust.github.io/lifestyle-tool/
 - 後端：`apps-script/`（Google Apps Script Web App，執行身分「我」、存取權「所有人」）。目前沒有 clasp，由擁有者把檔案貼進線上編輯器部署。
-- 推播：LINE Messaging API（`apps-script/Line.gs`），排程在 `Triggers.gs`（週五 18 點 `weeklyEventsJob`、週日 3 點 `cleanupJob`）。
+- 推播：LINE Messaging API（`apps-script/Line.gs`），排程在 `Triggers.gs`（週五 10 點 `weeklyEventsJob`、週日 3 點 `cleanupJob`）。
 - repo `DoubleJust/lifestyle-tool` 是**公開**的。
 
 ## 必須遵守
@@ -17,7 +17,7 @@
 4. 後端新功能一律註冊在 `Code.gs` 的 `ACTIONS` 白名單，設定每日 `limit`，並做輸入驗證（失敗丟 `inputError_()`）。所有回應都是 JSON：`{ok:true,data}` 或 `{ok:false,code}`，不回傳 stack 或原始錯誤訊息。
 5. 前端呼叫後端一律透過 `docs/js/api.js` 的 `call()`（`Content-Type: text/plain`，不可改成 `application/json`）。
 6. 前端資源一律用相對路徑（`./...`），因為網站在 `/lifestyle-tool/` 子路徑下。
-7. 所有 LINE push 都要經過 `pushLine_`：KILL_SWITCH、每日 5／每月 150 則上限、用 push_log＋`X-Line-Retry-Key` 去重。
+7. 所有 LINE push 都要經過 `pushLine_`：KILL_SWITCH、每日 5／每月 50 則上限、用 push_log＋`X-Line-Retry-Key` 去重。
 8. 不得把 Google Places 回傳的內容寫進試算表。
 
 ## 改版流程

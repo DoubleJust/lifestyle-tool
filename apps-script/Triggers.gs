@@ -9,7 +9,7 @@ function setupTriggers() {
     .filter(function (t) { return MANAGED_.indexOf(t.getHandlerFunction()) >= 0; })
     .forEach(function (t) { ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('weeklyEventsJob').timeBased()
-    .onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(18).inTimezone(TZ_).create();
+    .onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(10).inTimezone(TZ_).create();
   ScriptApp.newTrigger('cleanupJob').timeBased()
     .onWeekDay(ScriptApp.WeekDay.SUNDAY).atHour(3).inTimezone(TZ_).create();
   const names = ScriptApp.getProjectTriggers().map(function (t) { return t.getHandlerFunction(); });

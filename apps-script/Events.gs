@@ -33,7 +33,7 @@ function evDateParam_(v, field) {
   return v;
 }
 
-/** 排程：每週五 18 點推播下週活動。同一週重複執行只會推一次（pushLine_ 依 eventId 去重）。 */
+/** 排程：每週五 10 點推播下週活動。同一週重複執行只會推一次（pushLine_ 依 eventId 去重）。 */
 function weeklyEventsJob() {
   runJob_('weeklyEventsJob', function () {
     const range = nextWeekRange_();

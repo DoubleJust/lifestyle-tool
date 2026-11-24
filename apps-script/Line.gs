@@ -1,12 +1,12 @@
 /**
  * LINE Messaging API 推播。所有推播一律經過 pushLine_：
  *   KILL_SWITCH → 每日／每月上限 → push_log 去重 → 送出（帶 X-Line-Retry-Key）→ 更新 push_log。
- * 免費方案每月 200 則；這裡每日 5 則、每月 150 則就停（§8）。
+ * 免費方案每月 200 則；這裡每日 5 則、每月 50 則就停（擁有者 2026-11-25 設定）。
  */
 
 const LINE_API_ = 'https://api.line.me/v2/bot';
-const LINE_LIMITS_ = { daily: 5, monthly: 150 };
-const PUSH_LOG_SCAN_ = 400;   // 只讀最近 400 筆（每月最多 150 則，足夠涵蓋本月）
+const LINE_LIMITS_ = { daily: 5, monthly: 50 };
+const PUSH_LOG_SCAN_ = 400;   // 只讀最近 400 筆（每月最多 50 則，足夠涵蓋本月）
 
 /**
  * @param {string} text 文字訊息（超過 4,900 字會截斷；LINE 上限 5,000）

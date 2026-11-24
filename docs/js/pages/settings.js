@@ -42,7 +42,7 @@ function lineSection() {
   } }, '查看本月用量');
 
   return card('LINE 推播',
-    h('p', { class: 'muted' }, '每週五 18 點推播下週台北／桃園活動。免費方案每月 200 則，本工具到 150 則就自動停止。'),
+    h('p', { class: 'muted' }, '每週五 10 點推播下週台北／桃園活動。免費方案每月 200 則，本工具到 50 則就自動停止。'),
     h('div', { class: 'row' }, btn),
     status,
     info,
