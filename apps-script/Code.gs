@@ -5,12 +5,12 @@
  *   { "token": "...", "action": "ping", "params": { ... } }
  * 回應格式：
  *   成功 { "ok": true, "data": { ... } }
- *   失敗 { "ok": false, "code": "AUTH" | "DISABLED" | "BAD_ACTION" | "RATE" | "BAD_INPUT" | "BAD_JSON" | "TOO_LARGE" | "INTERNAL" }
+ *   失敗 { "ok": false, "code": "AUTH" | "DISABLED" | "BAD_ACTION" | "RATE" | "BUSY" | "BAD_INPUT" | "BAD_JSON" | "TOO_LARGE" | "INTERNAL" }
  *
  * 部署：「管理部署作業」→ 編輯（鉛筆）→ 版本選「新版本」→ 部署。這樣 /exec 網址才不會變。
  */
 
-const BACKEND_VERSION = '1.1.0';
+const BACKEND_VERSION = '1.3.0';
 
 /**
  * action 白名單。limit = 每日呼叫上限（台北時間每天 00:00 重算）。
@@ -33,6 +33,34 @@ const ACTIONS = {
     limit: 200,
     handler: function () {
       return { card_ids: readMyCards_() };
+    }
+  },
+  // F3：台北／桃園活動。params { start, endExclusive }（yyyy-MM-dd，半開區間，最長 31 天）
+  'events.search': {
+    limit: 50,
+    handler: function (params) {
+      return eventsSearch_(params);
+    }
+  },
+  // F3：收藏清單與已移除清單
+  'events.prefs': {
+    limit: 200,
+    handler: function () {
+      return eventsPrefs_();
+    }
+  },
+  // F3：左滑移除／收藏／復原。params { uid, state: 'hidden'|'fav'|'none', title?, ev? }
+  'events.setPref': {
+    limit: 300,
+    handler: function (params) {
+      return eventsSetPref_(params);
+    }
+  },
+  // 設定頁：本月 LINE 推播用量
+  'line.usage': {
+    limit: 30,
+    handler: function () {
+      return lineUsage_();
     }
   },
   // 步驟 0 測試頁（docs/poc.html）用：故意出錯，確認錯誤不會外洩
@@ -74,6 +102,7 @@ function doPost(e) {
     const data = def.handler(params);
     return reply_({ ok: true, data: data === undefined ? null : data });
   } catch (err) {
+    if (err && err.name === 'BusyError') return reply_({ ok: false, code: 'BUSY' });
     if (err && err.name === 'InputError') return reply_({ ok: false, code: 'BAD_INPUT', field: err.field || null });
     console.error('doPost INTERNAL: ' + sanitize_(String((err && err.stack) || err)).slice(0, 500));
     return reply_({ ok: false, code: 'INTERNAL' });

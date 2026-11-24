@@ -134,7 +134,7 @@ main {
 .muted { color: var(--muted); font-size: 14px; }
 
 label { display: block; font-size: 14px; color: var(--muted); margin: 12px 0 6px; }
-input[type="text"], input[type="password"], input[type="url"], input[type="number"], select {
+input[type="text"], input[type="password"], input[type="url"], input[type="number"], input[type="date"], select {
   width: 100%; font: inherit; font-size: 16px; /* 16px 以上 iOS 才不會自動放大 */
   padding: 11px 16px; border: 0; border-radius: 999px;
   background: var(--field); color: var(--fg);
@@ -260,3 +260,99 @@ button.choice.active { background: var(--chip-on-bg); color: var(--chip-on-fg); 
 .result-foot .tag { background: transparent; box-shadow: inset 0 0 0 1px var(--tag-line); }
 .result-foot a.tag { color: inherit; font-weight: 600; }
 .result .status { margin: 10px 0 0; }
+
+/* ── 活動頁 ── */
+input[type="date"] { min-height: 44px; }
+.ev-custom[hidden] { display: none; }
+.ev-custom .grid2 label { margin-top: 12px; }
+.ev-cats { margin: 0 4px 6px; }
+.ev-cats button.chip { background: var(--surface); box-shadow: var(--shadow); }
+.ev-cats button.chip[aria-pressed="true"] { background: var(--chip-on-bg); }
+
+.ev-day { display: flex; align-items: baseline; gap: 8px; margin: 18px 6px 8px; font-size: 16px; font-weight: 800; }
+.ev-day.weekend span:first-child { color: var(--accent-ink); }
+.ev-day .count { font-size: 12px; font-weight: 600; color: var(--muted); }
+
+.event {
+  background: var(--surface); border-radius: 22px; padding: 14px 16px 12px; margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.ev-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+.ev-top .tags { margin-top: 0; }
+.ev-time { font-size: 15px; font-weight: 800; color: var(--accent-ink); }
+.ev-title { margin: 6px 0 0; font-size: 17px; font-weight: 800; line-height: 1.4; overflow-wrap: anywhere; }
+.ev-place, .ev-price { margin: 6px 0 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.ev-place b { color: var(--fg); font-weight: 600; }
+.ev-price { white-space: pre-line; }
+.event .tag { background: var(--field); }
+.event .tag.cat { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.ev-shows { margin-top: 10px; }
+.ev-label { font-size: 12px; color: var(--muted); }
+.ev-shows .tags { margin-top: 4px; }
+.ev-foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1.5px dashed var(--foot-line); }
+.event .ev-foot .tag { background: transparent; box-shadow: inset 0 0 0 1px var(--tag-line); }
+.ev-foot a.tag { color: var(--accent-ink); font-weight: 600; }
+
+.ev-ongoing { margin-top: 18px; }
+.ev-ongoing summary {
+  list-style: none; cursor: pointer; padding: 12px 18px; border-radius: 999px;
+  background: var(--surface); box-shadow: var(--shadow); font-weight: 700; font-size: 15px;
+}
+.ev-ongoing summary::-webkit-details-marker { display: none; }
+.ev-ongoing summary::after { content: '展開 ▾'; float: right; color: var(--muted); font-weight: 600; font-size: 13px; }
+.ev-ongoing[open] summary::after { content: '收合 ▴'; }
+.ev-ongoing > .form-note { margin: 10px 6px; }
+
+/* 設定頁：最近推播 */
+ul.push-list { list-style: none; margin: 10px 0 0; padding: 0; font-size: 13px; color: var(--muted); }
+ul.push-list li { padding: 4px 0; border-top: 1px dashed var(--line); overflow-wrap: anywhere; }
+ul.push-list b { color: var(--fg); font-weight: 600; }
+
+/* 活動頁：找活動｜收藏 切換、篩選分組 */
+.ev-mode { margin: 0 4px 12px; }
+.ev-mode button.chip, .ev-cats button.chip { background: var(--surface); box-shadow: var(--shadow); }
+.ev-mode button.chip { min-height: 38px; padding: 7px 18px; font-size: 15px; }
+.ev-mode button.chip[aria-pressed="true"] { background: var(--chip-on-bg); }
+.card[hidden] { display: none; }
+.ev-group { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; }
+.ev-group:first-child { margin-top: 0; }
+.ev-group-label { flex: 0 0 auto; width: 2.4em; padding-top: 7px; font-size: 13px; color: var(--muted); }
+.ev-group .chips { flex: 1; margin-top: 0; }
+
+/* 活動卡片：左滑移除 */
+.swipe { position: relative; margin-bottom: 10px; border-radius: 22px; }
+.swipe .event { position: relative; margin-bottom: 0; touch-action: pan-y; transition: transform .2s ease; }
+.swipe.dragging .event { transition: none; }
+.swipe::before {
+  content: attr(data-label); position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
+  font-size: 15px; font-weight: 700; color: var(--bad); opacity: 0;
+}
+.swipe.dragging { background: var(--accent-soft); }
+.swipe.dragging::before, .swipe.leaving::before { opacity: 1; }
+.swipe.armed, .swipe.leaving { background: var(--bad); }
+.swipe.armed::before, .swipe.leaving::before { color: var(--surface); }
+
+button.tag.tag-btn {
+  min-height: 0; padding: 4px 11px; font-size: 12px; line-height: 1.45; cursor: pointer;
+}
+.ev-foot button.tag-btn.fav.on { color: var(--accent-ink); font-weight: 700; box-shadow: inset 0 0 0 1px var(--accent); }
+.ev-foot button.tag-btn.remove { color: var(--muted); }
+
+/* 收藏頁：已移除的活動 */
+ul.ev-hidden-list { list-style: none; margin: 0 6px; padding: 0; }
+ul.ev-hidden-list li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+.ev-hidden-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+ul.ev-hidden-list button.chip { flex-shrink: 0; background: var(--surface); box-shadow: var(--shadow); }
+
+/* 底部提示（移除／收藏後可復原） */
+.toast {
+  position: fixed; z-index: 20; left: 16px; right: 16px;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px);
+  max-width: 640px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 10px 10px 18px; border-radius: 999px;
+  background: var(--chip-on-bg); color: var(--chip-on-fg); font-size: 14px;
+  box-shadow: var(--shadow);
+}
+.toast span { min-width: 0; overflow-wrap: anywhere; }
+.toast button { flex-shrink: 0; min-height: 34px; padding: 6px 14px; background: var(--accent); color: var(--on-accent); font-weight: 700; }

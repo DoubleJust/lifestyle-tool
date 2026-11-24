@@ -6,17 +6,18 @@
 ## 架構
 - 前端：`docs/`，純 HTML/CSS/ES modules，無建置步驟。GitHub Pages 從 `main` 的 `/docs` 發佈 → https://doublejust.github.io/lifestyle-tool/
 - 後端：`apps-script/`（Google Apps Script Web App，執行身分「我」、存取權「所有人」）。目前沒有 clasp，由擁有者把檔案貼進線上編輯器部署。
-- 推播：LINE Messaging API（之後的步驟）。
+- 推播：LINE Messaging API（`apps-script/Line.gs`），排程在 `Triggers.gs`（週五 18 點 `weeklyEventsJob`、週日 3 點 `cleanupJob`）。
 - repo `DoubleJust/lifestyle-tool` 是**公開**的。
 
 ## 必須遵守
 1. 日期一律以 `Asia/Taipei` 為準，用 `yyyy-MM-dd` 字串與半開區間 `[start, endExclusive)`。
 2. 金鑰、token、LINE user ID、持有卡片清單、真實 API 回應樣本、個人紀錄**一律不 commit**。機密只放 Apps Script 的指令碼屬性。萬一誤 commit：先輪替憑證，再清歷史。
+   例外：**公開資料**的精簡測試樣本可以放 `tests/fixtures/`（例如文化部活動 19 筆、只留需要的欄位）；完整的原始回應仍不 commit。
 3. 外部資料只用 `textContent` 顯示（用 `docs/js/ui.js` 的 `h()`），**禁止 `innerHTML`**。
 4. 後端新功能一律註冊在 `Code.gs` 的 `ACTIONS` 白名單，設定每日 `limit`，並做輸入驗證（失敗丟 `inputError_()`）。所有回應都是 JSON：`{ok:true,data}` 或 `{ok:false,code}`，不回傳 stack 或原始錯誤訊息。
 5. 前端呼叫後端一律透過 `docs/js/api.js` 的 `call()`（`Content-Type: text/plain`，不可改成 `application/json`）。
 6. 前端資源一律用相對路徑（`./...`），因為網站在 `/lifestyle-tool/` 子路徑下。
-7. 所有 LINE push 都要經過 `pushLine_`：檢查每日／每月上限並用 push_log 去重（步驟 3 實作）。
+7. 所有 LINE push 都要經過 `pushLine_`：KILL_SWITCH、每日 5／每月 150 則上限、用 push_log＋`X-Line-Retry-Key` 去重。
 8. 不得把 Google Places 回傳的內容寫進試算表。
 
 ## 改版流程
@@ -28,7 +29,10 @@
 ## 進度（依規劃書 §9）
 - 步驟 0 通訊 PoC、步驟 1 PWA 骨架、步驟 2 F1 信用卡：**都已通過 iPhone 驗收**。
 - 2026-11-24 完成 UI 改版（前端 1.2.4），擁有者已驗收。
-- 下一步：步驟 3（LINE 串接、`runJob_`、F3 活動＋週五推播）。
+- 步驟 3（LINE、`runJob_`、F3 活動＋週五推播）：實作在 `step3-line-events` 分支，等擁有者部署後端並驗收。
+  - 活動篩選邏輯：後端 `EventsLib.gs`（純函式，`tests/events.test.mjs` 用 node:vm 載入測試）、前端 `docs/js/lib/events.js`。
+  - 左滑移除／收藏存在試算表 `event_prefs`（手機電腦同步）；已移除的活動不出現在查詢與週五推播。
+  - 地址沒寫縣市時用行政區名稱判斷，再不行才用經緯度矩形（台北矩形會包到新北，所以只當最後手段）。
 
 ## 視覺設計（2026-11-24 擁有者定案，新頁面一律沿用）
 - 淺色「柔和圓潤」：奶油色底、白色大圓角區塊、圓形（pill）輸入框與按鈕、圓角底部分頁列，主色橘。

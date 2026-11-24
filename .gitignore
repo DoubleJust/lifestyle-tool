@@ -2,6 +2,9 @@
 personal-tools-plan*.md
 .claude/
 
+# 外觀樣板（截圖後刪除，不 commit）
+docs/_mockups/
+
 # 機密與工具憑證
 .env
 .env.*

@@ -49,6 +49,13 @@ function inputError_(field, message) {
   return err;
 }
 
+/** 資源忙碌（例如排程工作正在更新快取）時丟出，doPost 會轉成 BUSY */
+function busyError_() {
+  const err = new Error('busy');
+  err.name = 'BusyError';
+  return err;
+}
+
 /** 遮罩：先把實際機密值逐一換掉（最可靠），再處理常見格式 */
 function sanitize_(s) {
   const props = PropertiesService.getScriptProperties().getProperties();

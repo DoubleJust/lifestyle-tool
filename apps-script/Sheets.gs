@@ -4,7 +4,10 @@
 const SHEETS_ = {
   settings: ['key', 'value', '說明'],
   my_cards: ['card_id', '備註（例如卡片名稱，程式不讀）'],
-  log: ['時間', '工作', '結果', '耗時 ms']
+  log: ['時間', '工作', '結果', '耗時 ms'],
+  events_cache: ['抓取日期', '開始', '場次 JSON（程式自動覆寫，請勿手動編輯）'],
+  push_log: ['時間', 'event_id', '狀態', 'retry_key', 'HTTP', '備註'],
+  event_prefs: ['uid', '狀態（hidden＝已移除、fav＝收藏）', '日期', '標題', '收藏時的活動 JSON（程式用）']
 };
 
 /**
@@ -65,4 +68,13 @@ function readMyCards_() {
       return true;
     })
     .slice(0, 100);
+}
+
+/** 寫一筆執行紀錄到 log 工作表（訊息經過遮罩、截斷到 500 字）。寫入失敗只印在執行記錄，不拋出。 */
+function writeLog_(job, result, ms) {
+  try {
+    getSheet_('log').appendRow([new Date(), String(job).slice(0, 50), sanitize_(String(result)).slice(0, 500), ms || 0]);
+  } catch (e) {
+    console.log('writeLog_ failed: ' + sanitize_(String(e && e.message || e)).slice(0, 200));
+  }
 }

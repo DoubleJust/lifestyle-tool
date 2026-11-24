@@ -5,7 +5,49 @@ import { APP_VERSION } from '../config.js';
 import { checkForUpdate } from '../sw-client.js';
 
 export function mount(view) {
-  view.append(tokenSection(), installSection(), aboutSection());
+  view.append(tokenSection(), lineSection(), installSection(), aboutSection());
+}
+
+// ── LINE 推播用量 ─────────────────────────────────────
+const PUSH_STATUS = { sent: '已送出', pending: '結果不明', failed: '失敗', retried: '已重送' };
+
+function lineSection() {
+  const status = h('p', { class: 'status', role: 'status' });
+  const info = h('dl', { class: 'kv', hidden: true });
+  const recent = h('ul', { class: 'push-list', hidden: true });
+
+  const btn = h('button', { type: 'button', onclick: async () => {
+    btn.disabled = true;
+    setStatus(status, '讀取中…', '');
+    try {
+      const d = await call('line.usage');
+      const rows = [
+        ['設定', d.configured ? '已設定' : '尚未設定 LINE token 或 user ID'],
+        [`${d.month} 已推播`, `${d.sent} 則（本工具上限每月 ${d.monthlyLimit}、每日 ${d.dailyLimit}）`],
+        ['LINE 官方計數', d.officialUsed == null ? '讀取失敗' : `${d.officialUsed}${d.officialQuota ? `／${d.officialQuota}` : ''} 則`]
+      ];
+      if (d.pending) rows.push(['結果不明', `${d.pending} 則（算進用量）`]);
+      if (d.failed) rows.push(['失敗', `${d.failed} 則`]);
+      info.replaceChildren(...rows.flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, v)]));
+      info.hidden = false;
+      recent.replaceChildren(...(d.recent || []).map((r) =>
+        h('li', {}, h('span', {}, r.time), ' ', h('span', {}, r.eventId), ' ', h('b', {}, PUSH_STATUS[r.status] || r.status))));
+      recent.hidden = !(d.recent || []).length;
+      setStatus(status, '', '');
+    } catch (err) {
+      setStatus(status, err instanceof ApiError ? err.message : `發生錯誤：${err.message}`, 'bad');
+    } finally {
+      btn.disabled = false;
+    }
+  } }, '查看本月用量');
+
+  return card('LINE 推播',
+    h('p', { class: 'muted' }, '每週五 18 點推播下週台北／桃園活動。免費方案每月 200 則，本工具到 150 則就自動停止。'),
+    h('div', { class: 'row' }, btn),
+    status,
+    info,
+    recent
+  );
 }
 
 // ── 後端連線 ──────────────────────────────────────────
