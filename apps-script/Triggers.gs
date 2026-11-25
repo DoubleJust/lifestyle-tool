@@ -1,7 +1,7 @@
 /** 排程：觸發器設定、共用的 runJob_、每週清理 */
 
 // 本工具管理的觸發器。setupTriggers 只刪這些，不會動到專案裡其他觸發器。
-const MANAGED_ = ['weeklyEventsJob', 'dailyFlightMailJob', 'cleanupJob'];
+const MANAGED_ = ['weeklyEventsJob', 'dailyFlightMailJob', 'cleanupJob', 'dailyHealthJob'];
 
 /** 手動執行一次（可重複執行）：重建本工具的觸發器。機票的 dailyFlightMailJob 等步驟 6 再加。 */
 function setupTriggers() {
@@ -12,6 +12,8 @@ function setupTriggers() {
     .onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(10).inTimezone(TZ_).create();
   ScriptApp.newTrigger('cleanupJob').timeBased()
     .onWeekDay(ScriptApp.WeekDay.SUNDAY).atHour(3).inTimezone(TZ_).create();
+  ScriptApp.newTrigger('dailyHealthJob').timeBased()
+    .everyDays(1).atHour(6).inTimezone(TZ_).create();
   const names = ScriptApp.getProjectTriggers().map(function (t) { return t.getHandlerFunction(); });
   writeLog_('setupTriggers', 'OK ' + names.join(','), 0);
   console.log('目前的觸發器：' + names.join(', '));

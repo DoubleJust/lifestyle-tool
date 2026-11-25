@@ -404,3 +404,32 @@ function evFavList_(favs, rows, today) {
   });
   return out;
 }
+
+// ── 資料品質與過期清理 ────────────────────────────────────────────
+
+/**
+ * 文化部資料抓到了，但內容可疑（格式改變等）時回傳問題描述；正常回空字串。
+ * 有問題時不覆寫快取，並記為 API 異常。
+ */
+function evFeedProblem_(raw, rows) {
+  if (!Array.isArray(raw) || !raw.length) return '文化部資料是空的';
+  const sample = raw.slice(0, 50);
+  const shaped = sample.filter(function (e) {
+    return e && e.UID && e.title && Array.isArray(e.showInfo) && e.showInfo.length && e.showInfo[0].time !== undefined;
+  }).length;
+  if (shaped < sample.length / 2) return '文化部資料格式可能改變（缺少 UID／title／showInfo 欄位）';
+  if (raw.length >= 100 && !rows.length) return '文化部資料有 ' + raw.length + ' 筆，但篩不出任何台北／桃園場次（地址或時間格式可能改變）';
+  return '';
+}
+
+/**
+ * 收藏／移除紀錄中，活動已經結束的 uid（今天以後沒有任何場次）。
+ * rows 必須是「今天」的快取（只含結束日 ≥ 今天的場次），否則不要呼叫。
+ */
+function evExpiredPrefUids_(prefs, rows, today) {
+  const alive = {};
+  rows.forEach(function (r) { if (r.end.slice(0, 10) >= today) alive[r.uid] = true; });
+  const out = [];
+  prefs.forEach(function (p) { if (!alive[p.uid] && out.indexOf(p.uid) < 0) out.push(p.uid); });
+  return out;
+}

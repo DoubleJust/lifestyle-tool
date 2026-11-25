@@ -3,9 +3,47 @@ import { call, ApiError } from '../api.js';
 import { getToken, setToken, clearToken } from '../store.js';
 import { APP_VERSION } from '../config.js';
 import { checkForUpdate } from '../sw-client.js';
+import { checkHealth, cachedHealth } from '../health.js';
+import { STATUS_LABEL, fmtTime } from '../lib/health.js';
 
 export function mount(view) {
-  view.append(tokenSection(), lineSection(), installSection(), aboutSection());
+  view.append(tokenSection(), healthSection(), lineSection(), installSection(), aboutSection());
+}
+
+// ── 資料來源狀態（外部 API 是否抓得到） ──────────────
+function healthSection() {
+  const status = h('p', { class: 'status', role: 'status' });
+  const list = h('div', { class: 'health-list' });
+  const checkedAt = h('p', { class: 'form-note' });
+
+  const show = (d) => {
+    if (!d) { list.replaceChildren(h('p', { class: 'muted' }, '尚未檢查。')); checkedAt.textContent = ''; return; }
+    list.replaceChildren(...d.sources.map((s) => h('div', { class: `health-item ${s.status}` },
+      h('div', { class: 'health-head' }, h('b', {}, s.name), h('span', { class: 'tag' }, STATUS_LABEL[s.status] || s.status)),
+      h('div', { class: 'muted' }, `最後成功：${fmtTime(s.lastOk)}` +
+        (s.status === 'fail' ? `；${fmtTime(s.since)} 起連續失敗 ${s.fails} 次` : '')),
+      s.status === 'fail' && s.msg ? h('div', { class: 'muted' }, `錯誤：${s.msg}`) : null
+    )));
+    checkedAt.textContent = `App 上次向後端確認：${fmtTime(d.at)}。後端每天 6 點自動檢查文化部資料；LINE 在每次推播時檢查。`;
+  };
+  show(cachedHealth());
+
+  const btn = h('button', { type: 'button', onclick: async () => {
+    btn.disabled = true;
+    setStatus(status, '檢查中…', '');
+    try {
+      show(await checkHealth({ force: true }));
+      setStatus(status, '', '');
+    } catch (err) {
+      setStatus(status, err instanceof ApiError ? err.message : `發生錯誤：${err.message}`, 'bad');
+    } finally {
+      btn.disabled = false;
+    }
+  } }, '重新檢查');
+
+  return card('資料來源狀態',
+    h('p', { class: 'muted' }, '外部 API 抓不到資料時，App 上方會出現紅色提示。'),
+    list, checkedAt, h('div', { class: 'row' }, btn), status);
 }
 
 // ── LINE 推播用量 ─────────────────────────────────────
@@ -134,7 +172,7 @@ function installSection() {
         h('li', {}, '用 Safari 開啟這個網址。'),
         h('li', {}, '點下方工具列的「分享」按鈕。'),
         h('li', {}, '選「加入主畫面」，再按「新增」。'),
-        h('li', {}, '之後從主畫面的「工具箱」圖示開啟，並在設定頁輸入一次 token。')
+        h('li', {}, '之後從主畫面的「Lifestyle Tool」圖示開啟，並在設定頁輸入一次 token。')
       )
     );
   }

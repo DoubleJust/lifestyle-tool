@@ -55,6 +55,7 @@ function pushLine_(text, eventId) {
   // 網路錯誤或 5xx：不知道有沒有送達 → 保持 pending（算進用量，下次沿用同一個 key）
   const status = (code === 200 || code === 409) ? 'sent' : (code === 0 || code >= 500) ? 'pending' : 'failed';
   sh.getRange(row, 3, 1, 4).setValues([[status, retryKey, code || '', note || (code === 409 ? '先前已送出' : '')]]);
+  healthMark_('line', status === 'sent', 'HTTP ' + (code || 'network') + ' ' + note);
 
   // 同一事件之前沒結果的紀錄標成 retried，避免重複算進用量
   log.forEach(function (r) {
@@ -138,6 +139,7 @@ function checkLineSetup() {
   console.log('LINE_USER_ID：' + (!to ? '❌ 未設定' : /^U[0-9a-f]{32}$/.test(to) ? '格式正確' : '❌ 格式不對（應為 U 開頭共 33 字元）'));
   if (!token) return;
   const res = UrlFetchApp.fetch(LINE_API_ + '/info', { headers: { Authorization: 'Bearer ' + token }, muteHttpExceptions: true });
+  healthMark_('line', res.getResponseCode() === 200, 'checkLineSetup HTTP ' + res.getResponseCode());
   if (res.getResponseCode() === 200) {
     console.log('✅ Token 有效，官方帳號：' + JSON.parse(res.getContentText()).displayName);
   } else {

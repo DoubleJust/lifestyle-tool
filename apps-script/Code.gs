@@ -10,7 +10,7 @@
  * 部署：「管理部署作業」→ 編輯（鉛筆）→ 版本選「新版本」→ 部署。這樣 /exec 網址才不會變。
  */
 
-const BACKEND_VERSION = '1.3.1';
+const BACKEND_VERSION = '1.4.0';
 
 /**
  * action 白名單。limit = 每日呼叫上限（台北時間每天 00:00 重算）。
@@ -54,6 +54,13 @@ const ACTIONS = {
     limit: 300,
     handler: function (params) {
       return eventsSetPref_(params);
+    }
+  },
+  // 外部 API 健康狀態（App 上方的異常提示、設定頁）
+  health: {
+    limit: 300,
+    handler: function () {
+      return healthStatus_();
     }
   },
   // 設定頁：本月 LINE 推播用量

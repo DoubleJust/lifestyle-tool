@@ -77,12 +77,17 @@ function evLoadRows_(opts) {
     if (props.getProperty('EV_CACHE_DATE') === today) return { rows: evReadCache_(), fetched: today, stale: false };
     try {
       const t0 = Date.now();
-      const rows = evToShowRows_(evFetchRaw_(), today, addDays_(today, EV_CACHE_DAYS_));
+      const raw = evFetchRaw_();
+      const rows = evToShowRows_(raw, today, addDays_(today, EV_CACHE_DAYS_));
+      const problem = evFeedProblem_(raw, rows);
+      if (problem) throw new Error(problem);   // 格式可疑時不覆寫快取
       evWriteCache_(today, rows);
       props.setProperty('EV_CACHE_DATE', today);
+      healthMark_('culture', true);
       writeLog_('events.refresh', 'OK rows=' + rows.length, Date.now() - t0);
       return { rows: rows, fetched: today, stale: false };
     } catch (e) {
+      if (e && e.name !== 'BusyError') healthMark_('culture', false, String(e && e.message || e));
       const cached = props.getProperty('EV_CACHE_DATE');
       if (cached && o.allowStale) {
         writeLog_('events.refresh', 'ERROR（改用 ' + cached + ' 的快取）' + sanitize_(String(e && e.message || e)).slice(0, 200), 0);
@@ -185,6 +190,25 @@ function eventsSetPref_(params) {
     }
     sh.getRange(row, 1, 1, 5).setNumberFormat('@').setValues(values);   // 純文字，避免「=」開頭的標題被當成公式
     return { uid: uid, state: state };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** 刪掉已結束活動的收藏／移除紀錄（dailyHealthJob 用，rows 必須是今天的快取）。回傳刪除筆數。 */
+function evPruneExpiredPrefs_(rows, today) {
+  const lock = LockService.getUserLock();
+  if (!lock.tryLock(10000)) return 0;   // 使用者正在操作，明天再清
+  try {
+    const prefs = evReadPrefs_();
+    const expired = evExpiredPrefUids_(prefs, rows, today);
+    if (!expired.length) return 0;
+    const sh = getSheet_('event_prefs');
+    prefs.filter(function (p) { return expired.indexOf(p.uid) >= 0; })
+      .map(function (p) { return p.row; })
+      .sort(function (a, b) { return b - a; })
+      .forEach(function (row) { sh.deleteRow(row); });
+    return expired.length;
   } finally {
     lock.releaseLock();
   }

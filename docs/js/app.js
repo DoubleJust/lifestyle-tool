@@ -1,5 +1,6 @@
 // App 進入點：hash 路由、分頁切換、service worker 註冊。
 import { initServiceWorker } from './sw-client.js';
+import { checkHealth } from './health.js';
 
 const ROUTES = {
   cards:    { title: '今天刷哪張？', load: () => import('./pages/cards.js') },
@@ -54,6 +55,7 @@ async function render() {
 window.addEventListener('hashchange', render);
 render();
 initServiceWorker();
+checkHealth();   // 外部 API 異常時在上方顯示提示（最多每 3 小時問一次後端）
 
 // 請瀏覽器盡量不要清除本機資料（Safari 17+ 支援）；失敗也不影響使用
 navigator.storage?.persist?.().catch(() => {});

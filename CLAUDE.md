@@ -6,7 +6,8 @@
 ## 架構
 - 前端：`docs/`，純 HTML/CSS/ES modules，無建置步驟。GitHub Pages 從 `main` 的 `/docs` 發佈 → https://doublejust.github.io/lifestyle-tool/
 - 後端：`apps-script/`（Google Apps Script Web App，執行身分「我」、存取權「所有人」）。目前沒有 clasp，由擁有者把檔案貼進線上編輯器部署。
-- 推播：LINE Messaging API（`apps-script/Line.gs`），排程在 `Triggers.gs`（週五 10 點 `weeklyEventsJob`、週日 3 點 `cleanupJob`）。
+- 推播：LINE Messaging API（`apps-script/Line.gs`），排程在 `Triggers.gs`（週五 10 點 `weeklyEventsJob`、每天 6 點 `dailyHealthJob`、週日 3 點 `cleanupJob`）。
+- 主畫面名稱「Lifestyle Tool」；圖示由 `tools/icon-source.png`（擁有者提供）經 `node tools/make-icons.mjs` 產生。
 - repo `DoubleJust/lifestyle-tool` 是**公開**的。
 
 ## 必須遵守
@@ -30,6 +31,10 @@
 - 步驟 0 通訊 PoC、步驟 1 PWA 骨架、步驟 2 F1 信用卡：**都已通過 iPhone 驗收**。
 - 2026-11-24 完成 UI 改版（前端 1.2.4），擁有者已驗收。
 - 2026-11-25 步驟 3（LINE、`runJob_`、F3 活動＋週五推播；前端 1.3.0、後端 1.3.0）：**已通過驗收**（推播 1 則、重跑不重複、觸發器已設定；iPhone 活動頁、左滑移除、收藏都 OK）。
+- 2026-11-25 前端 1.4.0／後端 1.4.0：
+  - 外部 API 健康狀態（`Health.gs`，指令碼屬性 `HEALTH`）：文化部、LINE 每次呼叫都記錄成功／失敗；`dailyHealthJob` 每天抓一次文化部資料（也預熱快取），格式可疑（`evFeedProblem_`）也算異常。App 開啟時最多每 3 小時問 `health`，異常就在上方顯示紅色提示，設定頁有「資料來源狀態」。新增外部 API 時要接 `healthMark_` 並加進 `HEALTH_SOURCES_`。
+  - 已結束活動的收藏／移除紀錄由 `dailyHealthJob` 每天自動刪除（`events_cache` 每天覆寫、`log` 留 90 天、`push_log` 留 400 天）。
+  - 臺北旅遊網 Open API 有 Cloudflare，Apps Script 被擋（2026-11-25 實測），不採用；Accupass、JOIN+1 沒有公開 API，依規格不爬網頁。
 - 下一步：步驟 4（F4-A Maps URL）。
   - 活動篩選邏輯：後端 `EventsLib.gs`（純函式，`tests/events.test.mjs` 用 node:vm 載入測試）、前端 `docs/js/lib/events.js`。
   - 左滑移除／收藏存在試算表 `event_prefs`（手機電腦同步）；已移除的活動不出現在查詢與週五推播。
