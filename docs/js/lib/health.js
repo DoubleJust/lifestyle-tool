@@ -11,12 +11,15 @@ export function fmtTime(ms) {
   return `${p.month}/${p.day} ${p.hour}:${p.minute}`;
 }
 
-export const STATUS_LABEL = { ok: '正常', fail: '異常', stale: '太久沒有檢查', unknown: '尚未檢查' };
+export const STATUS_LABEL = { ok: '正常', fail: '異常', stale: '太久沒有檢查', unknown: '尚未檢查', link: '連結模式（目前抓不到）' };
 
-/** 抓不到（異常或太久沒更新）而且有網址可以直接去找的來源 */
+/**
+ * 抓不到而且有網址可以直接去找的來源。
+ * fail／stale＝需要修（警告）；link＝連結模式（已知修不了，只顯示按鈕、不警告）。
+ */
 export function fallbackSources(sources) {
   return (Array.isArray(sources) ? sources : [])
-    .filter((s) => (s.status === 'fail' || s.status === 'stale') && s.link && s.key !== 'line');
+    .filter((s) => (s.status === 'fail' || s.status === 'stale' || s.status === 'link') && s.link && s.key !== 'line');
 }
 
 /** 有問題的來源 → 一行提示文字；沒問題回空陣列。unknown（還沒檢查過）不算問題。 */

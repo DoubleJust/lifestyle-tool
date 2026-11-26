@@ -63,3 +63,12 @@ test('evExpiredPrefUids_：今天以後沒有場次的收藏／移除紀錄', ()
   assert.deepEqual(J(gas.evExpiredPrefUids_(prefs, rows, '2026-11-25')), ['c', 'gone']);
   assert.deepEqual(J(gas.evExpiredPrefUids_([], rows, '2026-11-25')), []);
 });
+
+test('healthReport_：連結模式的來源抓不到時回報 link（不算異常）', () => {
+  const now = 100 * H;
+  const r = Object.fromEntries(J(gas.healthReport_({ taipei: { status: 'fail', at: now, since: now, fails: 3, msg: 'HTTP 403' }, accupass: { status: 'fail', at: now, since: now, fails: 2, msg: 'x' } }, now)).map((x) => [x.key, x]));
+  assert.equal(r.taipei.status, 'link');
+  assert.equal(r.taipei.msg, 'HTTP 403');
+  assert.match(r.taipei.link, /event-calendar\/\d{4}$/);
+  assert.equal(r.accupass.status, 'fail', '其他爬網頁來源照樣算異常');
+});

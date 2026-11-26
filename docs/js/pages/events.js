@@ -183,11 +183,15 @@ export function mount(view, opts = {}) {
   /** 抓不到的網站：改顯示「到 ○○ 找」的連結（資料來自查詢結果或 App 上次的健康檢查） */
   function renderFallback(sources) {
     const list = fallbackSources(sources || cachedHealth()?.sources);
+    const broken = list.filter((s) => s.status !== 'link');
+    const names = (l) => l.map((s) => s.name).join('、');
     fallback.hidden = list.length === 0;
+    fallback.classList.toggle('warn', broken.length > 0);   // 只有需要修的才用紅框
     fallback.replaceChildren(...(list.length ? [
-      h('p', { class: 'ev-fallback-title' }, `⚠️ ${list.map((s) => s.name).join('、')}暫時抓不到，以下結果不包含這些網站的最新活動，可以直接到網站找：`),
+      broken.length ? h('p', { class: 'ev-fallback-title' }, `⚠️ ${names(broken)}暫時抓不到，以下結果不包含這些網站的最新活動，可以直接到網站找：`) : null,
+      list.length > broken.length ? h('p', { class: 'ev-fallback-title' }, `${names(list.filter((s) => s.status === 'link'))}的活動目前無法自動取得，請直接到網站找：`) : null,
       h('div', { class: 'chips' }, list.map((s) => h('a', { class: 'chip-link', href: s.link, target: '_blank', rel: 'noopener noreferrer' }, `到 ${s.name} 找 ›`)))
-    ] : []));
+    ].filter(Boolean) : []));
   }
 
   function render() {

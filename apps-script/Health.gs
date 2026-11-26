@@ -5,9 +5,10 @@
  */
 
 // staleHours：超過這麼久沒檢查＝排程可能停了（0＝不檢查）。link：抓不到時 App 顯示「到 ○○ 找」的網址。
+// linkOnly：連結模式（已知修不了的封鎖）。每天照樣試抓，抓不到時狀態回報為 link：只顯示連結按鈕，不警告、不推 LINE。
 const HEALTH_SOURCES_ = {
   culture: { name: '文化部藝文活動', staleHours: 48, link: 'https://event.culture.tw/' },
-  taipei: { name: '臺北旅遊網', staleHours: 48, link: 'https://www.travel.taipei/zh-tw/event-calendar/{year}', scrape: true },
+  taipei: { name: '臺北旅遊網', staleHours: 48, link: 'https://www.travel.taipei/zh-tw/event-calendar/{year}', scrape: true, linkOnly: true },   // Cloudflare 擋 Google 伺服器（2026-11-27）
   tycg: { name: '桃園觀光行事曆', staleHours: 48, link: 'https://travel.tycg.gov.tw/zh-tw/event/calendar' },
   accupass: { name: 'Accupass', staleHours: 48, link: 'https://www.accupass.com/?area=north', scrape: true },
   join1: { name: 'JOIN+1', staleHours: 48, link: 'https://join1.app/discover?r=nearby', scrape: true },
@@ -34,6 +35,7 @@ function healthReport_(health, now) {
     const h = (health || {})[key] || null;
     let status = h ? h.status : 'unknown';
     if (h && status === 'ok' && def.staleHours && now - h.at > def.staleHours * 3600 * 1000) status = 'stale';
+    if (def.linkOnly && status === 'fail') status = 'link';
     return {
       key: key, name: def.name, status: status, scrape: !!def.scrape,
       link: def.link ? def.link.replace('{year}', String(new Date(now + 8 * 3600 * 1000).getUTCFullYear())) : '',

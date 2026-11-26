@@ -34,3 +34,10 @@ test('fallbackSources：抓不到又有網址的來源才顯示「到網站找�
   assert.deepEqual(fallbackSources(undefined), []);
   assert.match(healthProblems([src[1]])[0], /網頁可能改版，需要修 tool$/);
 });
+
+test('連結模式：顯示「到網站找」但不出現在警告裡', () => {
+  const src = [{ key: 'taipei', name: '臺北旅遊網', status: 'link', link: 'https://www.travel.taipei/zh-tw/event-calendar/2026', scrape: true, fails: 5 }];
+  assert.deepEqual(fallbackSources(src).map((s) => s.key), ['taipei']);
+  assert.deepEqual(healthProblems(src), []);
+  assert.equal(STATUS_LABEL.link, '連結模式（目前抓不到）');
+});

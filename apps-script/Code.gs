@@ -10,7 +10,7 @@
  * 部署：「管理部署作業」→ 編輯（鉛筆）→ 版本選「新版本」→ 部署。這樣 /exec 網址才不會變。
  */
 
-const BACKEND_VERSION = '1.5.0';
+const BACKEND_VERSION = '1.5.1';
 
 /**
  * action 白名單。limit = 每日呼叫上限（台北時間每天 00:00 重算）。
