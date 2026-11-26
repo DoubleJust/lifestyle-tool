@@ -375,3 +375,12 @@ ul.ev-hidden-list button.chip { flex-shrink: 0; background: var(--surface); box-
 .health-item.ok .tag { color: var(--ok); font-weight: 700; }
 .health-item.fail .tag, .health-item.stale .tag { color: var(--bad); font-weight: 700; }
 .health-item.fail { box-shadow: inset 0 0 0 1.5px var(--bad); }
+
+/* 活動頁：抓不到的網站改顯示連結 */
+.ev-fallback { box-shadow: inset 0 0 0 1.5px var(--bad); }
+.ev-fallback[hidden] { display: none; }
+.ev-fallback-title { font-size: 14px; color: var(--fg); }
+a.chip-link {
+  display: inline-flex; align-items: center; min-height: 34px; padding: 6px 14px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-ink); font-size: 14px; font-weight: 700; text-decoration: none;
+}

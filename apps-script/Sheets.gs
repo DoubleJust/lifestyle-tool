@@ -7,7 +7,8 @@ const SHEETS_ = {
   log: ['時間', '工作', '結果', '耗時 ms'],
   events_cache: ['抓取日期', '開始', '場次 JSON（程式自動覆寫，請勿手動編輯）'],
   push_log: ['時間', 'event_id', '狀態', 'retry_key', 'HTTP', '備註'],
-  event_prefs: ['uid', '狀態（hidden＝已移除、fav＝收藏）', '日期', '標題', '收藏時的活動 JSON（程式用）']
+  event_prefs: ['uid', '狀態（hidden＝已移除、fav＝收藏）', '日期', '標題', '收藏時的活動 JSON（程式用）'],
+  extra_cache: ['來源', '抓取日期', '開始', '場次 JSON（程式自動覆寫，請勿手動編輯）']
 };
 
 /**

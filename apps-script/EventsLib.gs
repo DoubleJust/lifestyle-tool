@@ -165,7 +165,7 @@ function evSearch_(rows, startYmd, endYmdExclusive, maxEvents) {
     let ev = byUid[r.uid];
     if (!ev) {
       ev = byUid[r.uid] = {
-        uid: r.uid, title: r.title, cat: r.cat, catName: EV_CATEGORIES_[r.cat] || '其他',
+        uid: r.uid, title: r.title, cat: r.cat, catName: EV_CATEGORIES_[r.cat] || r.catName || '其他',
         url: r.url, src: r.src, shows: [], spans: []
       };
       order.push(ev);
@@ -380,7 +380,7 @@ function evFavList_(favs, rows, today) {
     if (cur && cur.length) {
       const r0 = cur[0];
       ev = {
-        uid: f.uid, title: r0.title, cat: r0.cat, catName: EV_CATEGORIES_[r0.cat] || '其他', url: r0.url, src: r0.src,
+        uid: f.uid, title: r0.title, cat: r0.cat, catName: EV_CATEGORIES_[r0.cat] || r0.catName || '其他', url: r0.url, src: r0.src,
         shows: cur.map(function (r) {
           return { start: r.start, end: r.end, city: r.city, approx: !!r.approx, venue: r.venue, addr: r.addr, price: r.price };
         })

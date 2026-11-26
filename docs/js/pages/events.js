@@ -9,6 +9,8 @@ import {
   filterEvents, groupByDay, safeUrl, todayTaipei, addDays
 } from '../lib/events.js';
 import { createResultCache, loadPrefs, savePrefs, loadFavData, saveFavData } from '../lib/eventcache.js';
+import { cachedHealth } from '../health.js';
+import { fallbackSources } from '../lib/health.js';
 
 const CITIES = [{ id: 'all', name: '全部' }, { id: '臺北', name: '台北' }, { id: '桃園', name: '桃園' }];
 const MAX_SHOW_TAGS = 8;           // 多場次時最多列幾個場次
@@ -82,7 +84,7 @@ export function mount(view, opts = {}) {
   );
   const sourceNote = h('p', { class: 'form-note' });
   const setSourceNote = (fetched) => {
-    sourceNote.textContent = `資料來源：文化部藝文活動${fetched ? `，${fetched} 更新` : '（每天更新）'}。` +
+    sourceNote.textContent = `資料來源：文化部藝文活動、臺北旅遊網、桃園觀光行事曆、Accupass、JOIN+1（每天早上更新${fetched ? `，文化部資料 ${fetched}` : ""}）。` +
       '晚上＝19:00 以後開始。向左滑可以移除活動，之後不再出現。';
   };
   setSourceNote(null);
@@ -100,9 +102,10 @@ export function mount(view, opts = {}) {
 
   const status = h('p', { class: 'status', role: 'status' });
   const summary = h('p', { class: 'match', role: 'status' });
+  const fallback = h('div', { class: 'card ev-fallback', hidden: true });
   const catRow = h('div', { class: 'chips ev-cats', role: 'group', 'aria-label': '類別' });
   const results = h('div', { id: 'ev-results' });
-  view.append(modeRow, form, status, summary, catRow, results);
+  view.append(modeRow, form, status, fallback, summary, catRow, results);
 
   function sync() {
     const press = (btns, v) => { for (const b of btns) b.setAttribute('aria-pressed', b.dataset.id === v ? 'true' : 'false'); };
@@ -177,6 +180,16 @@ export function mount(view, opts = {}) {
     }
   }
 
+  /** 抓不到的網站：改顯示「到 ○○ 找」的連結（資料來自查詢結果或 App 上次的健康檢查） */
+  function renderFallback(sources) {
+    const list = fallbackSources(sources || cachedHealth()?.sources);
+    fallback.hidden = list.length === 0;
+    fallback.replaceChildren(...(list.length ? [
+      h('p', { class: 'ev-fallback-title' }, `⚠️ ${list.map((s) => s.name).join('、')}暫時抓不到，以下結果不包含這些網站的最新活動，可以直接到網站找：`),
+      h('div', { class: 'chips' }, list.map((s) => h('a', { class: 'chip-link', href: s.link, target: '_blank', rel: 'noopener noreferrer' }, `到 ${s.name} 找 ›`)))
+    ] : []));
+  }
+
   function render() {
     if (!data || mode !== 'search') return;
     const range = data.range;
@@ -194,6 +207,7 @@ export function mount(view, opts = {}) {
     setStatus(status, warn.join(''), warn.length && !updating ? 'warn' : '');
     setSourceNote(data.fetched);
 
+    renderFallback(data.sources);
     summary.replaceChildren(
       h('b', {}, rangeLabel(range) + (when ? `・${when}` : '')),
       ` ${where}共 ${f.total} 個活動` +

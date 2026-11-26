@@ -13,11 +13,17 @@ export function fmtTime(ms) {
 
 export const STATUS_LABEL = { ok: '正常', fail: '異常', stale: '太久沒有檢查', unknown: '尚未檢查' };
 
+/** 抓不到（異常或太久沒更新）而且有網址可以直接去找的來源 */
+export function fallbackSources(sources) {
+  return (Array.isArray(sources) ? sources : [])
+    .filter((s) => (s.status === 'fail' || s.status === 'stale') && s.link && s.key !== 'line');
+}
+
 /** 有問題的來源 → 一行提示文字；沒問題回空陣列。unknown（還沒檢查過）不算問題。 */
 export function healthProblems(sources) {
   return (Array.isArray(sources) ? sources : []).flatMap((s) => {
     if (s.status === 'fail') {
-      return [`${s.name}抓不到資料（${fmtTime(s.since)} 起${s.fails > 1 ? `，連續 ${s.fails} 次` : ''}）`];
+      return [`${s.name}抓不到資料（${fmtTime(s.since)} 起${s.fails > 1 ? `，連續 ${s.fails} 次` : ''}）${s.scrape ? '，網頁可能改版，需要修 tool' : ''}`];
     }
     if (s.status === 'stale') return [`${s.name}超過 2 天沒有更新（最後成功 ${fmtTime(s.lastOk)}，排程可能停了）`];
     return [];

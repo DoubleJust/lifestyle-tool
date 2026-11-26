@@ -7,6 +7,7 @@
 - 前端：`docs/`，純 HTML/CSS/ES modules，無建置步驟。GitHub Pages 從 `main` 的 `/docs` 發佈 → https://doublejust.github.io/lifestyle-tool/
 - 後端：`apps-script/`（Google Apps Script Web App，執行身分「我」、存取權「所有人」）。目前沒有 clasp，由擁有者把檔案貼進線上編輯器部署。
 - 推播：LINE Messaging API（`apps-script/Line.gs`），排程在 `Triggers.gs`（週五 10 點 `weeklyEventsJob`、每天 6 點 `dailyHealthJob`、週日 3 點 `cleanupJob`）。
+- 活動來源：文化部（主要，`Events.gs`）＋臺北旅遊網、桃園觀光行事曆、Accupass、JOIN+1（`SourcesLib.gs` 解析、`Sources.gs` 抓取，每天 6 點由 `dailyHealthJob` 抓一次存進 `extra_cache`）。查詢／推播／收藏都用 `evAllRows_()` 合併，同標題同一天視為重複、以文化部為主。
 - 主畫面名稱「Lifestyle Tool」；圖示由 `tools/icon-source.png`（擁有者提供）經 `node tools/make-icons.mjs` 產生。
 - repo `DoubleJust/lifestyle-tool` 是**公開**的。
 
@@ -20,6 +21,7 @@
 6. 前端資源一律用相對路徑（`./...`），因為網站在 `/lifestyle-tool/` 子路徑下。
 7. 所有 LINE push 都要經過 `pushLine_`：KILL_SWITCH、每日 5／每月 50 則上限、用 push_log＋`X-Line-Retry-Key` 去重。
 8. 不得把 Google Places 回傳的內容寫進試算表。
+9. 爬網頁來源（2026-11-27 擁有者推翻規格 §0「不爬網頁」，只限臺北旅遊網、Accupass、JOIN+1）：每天最多抓一次、每站活動頁有上限；只存標題、時間、地點、價格與連結；一個來源失敗不可影響其他來源，失敗時保留上次的資料並記到 `HEALTH`（App 顯示「到 ○○ 找」的連結、連續 2 天失敗推 1 則 LINE）。網站改版時修 `SourcesLib.gs` 的解析並更新 `tests/fixtures/sources/`。
 
 ## 改版流程
 1. 新增前端檔案時，把路徑加進 `docs/sw.js` 的 `SHELL` 清單。
@@ -35,6 +37,7 @@
   - 外部 API 健康狀態（`Health.gs`，指令碼屬性 `HEALTH`）：文化部、LINE 每次呼叫都記錄成功／失敗；`dailyHealthJob` 每天抓一次文化部資料（也預熱快取），格式可疑（`evFeedProblem_`）也算異常。App 開啟時最多每 3 小時問 `health`，異常就在上方顯示紅色提示，設定頁有「資料來源狀態」。新增外部 API 時要接 `healthMark_` 並加進 `HEALTH_SOURCES_`。
   - 已結束活動的收藏／移除紀錄由 `dailyHealthJob` 每天自動刪除（`events_cache` 每天覆寫、`log` 留 90 天、`push_log` 留 400 天）。
   - 臺北旅遊網 Open API 有 Cloudflare，Apps Script 被擋（2026-11-25 實測），不採用；Accupass、JOIN+1 沒有公開 API，依規格不爬網頁。
+- 2026-11-27 前端 1.5.0／後端 1.5.0：新增四個活動來源（見架構）。觀光署「活動－觀光資訊資料庫」的 ZIP 從 Apps Script 打不開（可能擋國外 IP），未採用；要用的話改走 TDX（需擁有者註冊取得金鑰）。
 - 下一步：步驟 4（F4-A Maps URL）。
   - 活動篩選邏輯：後端 `EventsLib.gs`（純函式，`tests/events.test.mjs` 用 node:vm 載入測試）、前端 `docs/js/lib/events.js`。
   - 左滑移除／收藏存在試算表 `event_prefs`（手機電腦同步）；已移除的活動不出現在查詢與週五推播。

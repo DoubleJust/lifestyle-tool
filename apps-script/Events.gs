@@ -15,7 +15,7 @@ function eventsSearch_(params) {
   if (start < today || start > addDays_(today, EV_MAX_START_AHEAD_)) throw inputError_('start');
   if (endEx <= start || endEx > addDays_(start, EV_MAX_RANGE_DAYS_)) throw inputError_('endExclusive');
 
-  const data = evLoadRows_({ allowStale: true });
+  const data = evAllRows_({ allowStale: true });
   const prefs = evReadPrefs_();
   const hidden = evPrefMap_(prefs, 'hidden');
   const r = evSearch_(evExcludeUids_(data.rows, hidden), start, endEx, 300);
@@ -23,6 +23,7 @@ function eventsSearch_(params) {
   r.hiddenCount = hiddenHere.total + hiddenHere.ongoingTotal;
   r.favUids = prefs.filter(function (p) { return p.state === 'fav'; }).map(function (p) { return p.uid; });
   r.range = { start: start, endExclusive: endEx };
+  r.sources = healthStatus_().sources.filter(function (s) { return s.key !== 'line'; });   // 前端用來顯示「到網站找」
   r.fetched = data.fetched;
   r.stale = data.stale;
   return r;
@@ -37,7 +38,7 @@ function evDateParam_(v, field) {
 function weeklyEventsJob() {
   runJob_('weeklyEventsJob', function () {
     const range = nextWeekRange_();
-    const data = evLoadRows_({ locked: true, allowStale: false });
+    const data = evAllRows_({ locked: true, allowStale: false });
     const rows = evExcludeUids_(data.rows, evPrefMap_(evReadPrefs_(), 'hidden'));
     const r = evSearch_(rows, range.startDate, range.endDateExclusive, 1000);
     const text = evWeeklyText_(r, range, { appUrl: EV_APP_URL_ });
@@ -50,7 +51,7 @@ function weeklyEventsJob() {
 /** 手動執行：只在執行記錄印出下週的推播內容，不會推播 */
 function previewWeeklyEvents() {
   const range = nextWeekRange_();
-  const data = evLoadRows_({ allowStale: false });
+  const data = evAllRows_({ allowStale: false });
   const r = evSearch_(evExcludeUids_(data.rows, evPrefMap_(evReadPrefs_(), 'hidden')), range.startDate, range.endDateExclusive, 1000);
   const text = evWeeklyText_(r, range, { appUrl: EV_APP_URL_ });
   console.log('長度 ' + text.length + '\n' + text);
@@ -223,7 +224,7 @@ function eventsPrefs_() {
   let fetched = null;
   if (favs.length) {
     try {
-      const d = evLoadRows_({ allowStale: true });
+      const d = evAllRows_({ allowStale: true });
       rows = d.rows;
       fetched = d.fetched;
     } catch (e) {

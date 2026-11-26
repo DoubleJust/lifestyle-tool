@@ -1,0 +1,114 @@
+{
+ "success": true,
+ "data": {
+  "section1": [
+   {
+    "article_id": 62052,
+    "title": "2025繽紛耶誕玩台北",
+    "address_county": "臺北市",
+    "address_township": "信義區",
+    "address": "臺北市15大百貨體系及市府東門廣場",
+    "date_begin": "2025-11-28",
+    "date_end": "2026-01-04",
+    "time_description": "",
+    "ticket": "",
+    "source_url": "https://www.travel.taipei/zh-tw/event/event-calendar/details/62052",
+    "outlink": false,
+    "coordinate_nlat": "25.03662",
+    "coordinate_elong": "121.56733"
+   },
+   {
+    "article_id": 65966,
+    "title": "2025臺北耶誕愛無限",
+    "address_county": "臺北市",
+    "address_township": "大安區",
+    "address": "新生南路一至三段、大安森林公園",
+    "date_begin": "2025-11-29",
+    "date_end": "2026-01-01",
+    "time_description": "",
+    "ticket": "",
+    "source_url": "https://www.travel.taipei/zh-tw/event/event-calendar/details/65966",
+    "outlink": false,
+    "coordinate_nlat": "25.03244",
+    "coordinate_elong": "121.53490"
+   },
+   {
+    "article_id": 62053,
+    "title": "臺北最High新年城-2026跨年活動",
+    "address_county": "臺北市",
+    "address_township": "信義區",
+    "address": "府前市民廣場",
+    "date_begin": "2025-12-31",
+    "date_end": "2026-01-01",
+    "time_description": "",
+    "ticket": "",
+    "source_url": "https://www.travel.taipei/zh-tw/event/event-calendar/details/62053",
+    "outlink": false,
+    "coordinate_nlat": "25.03598",
+    "coordinate_elong": "121.56301"
+   }
+  ],
+  "section4": [
+   {
+    "article_id": 66398,
+    "title": "2026士林官邸菊展",
+    "address_county": "臺北市",
+    "address_township": "士林區",
+    "address": "士林官邸公園",
+    "date_begin": "2026-11-27",
+    "date_end": "2026-12-13",
+    "time_description": "",
+    "ticket": "",
+    "source_url": "https://www.travel.taipei/zh-tw/event/event-calendar/details/66398",
+    "outlink": false,
+    "coordinate_nlat": "25.09138",
+    "coordinate_elong": "121.52916"
+   },
+   {
+    "article_id": 66400,
+    "title": "2026艋舺青山宮暗訪暨遶境",
+    "address_county": "臺北市",
+    "address_township": "萬華區",
+    "address": "艋舺青山宮",
+    "date_begin": "2026-11-28",
+    "date_end": "2026-11-30",
+    "time_description": "",
+    "ticket": "",
+    "source_url": "https://www.travel.taipei/zh-tw/event/event-calendar/details/66400",
+    "outlink": false,
+    "coordinate_nlat": "25.04001",
+    "coordinate_elong": "121.49954"
+   },
+   {
+    "article_id": 66401,
+    "title": "2026臺北耶誕愛無限",
+    "address_county": "臺北市",
+    "address_township": "大安區",
+    "address": "新生南路二段1號(大安森林公園)",
+    "date_begin": "2026-12-03",
+    "date_end": "2027-01-01",
+    "time_description": "",
+    "ticket": "",
+    "source_url": "https://www.travel.taipei/zh-tw/event/event-calendar/details/66401",
+    "outlink": false,
+    "coordinate_nlat": "25.02968",
+    "coordinate_elong": "121.53628"
+   },
+   {
+    "article_id": 66402,
+    "title": "2026繽紛耶誕玩台北",
+    "address_county": "臺北市",
+    "address_township": "信義區",
+    "address": "尚待規劃",
+    "date_begin": "2026-12-04",
+    "date_end": "2027-01-03",
+    "time_description": "",
+    "ticket": "",
+    "source_url": "https://www.travel.taipei/zh-tw/event/event-calendar/details/66402",
+    "outlink": false,
+    "coordinate_nlat": "",
+    "coordinate_elong": ""
+   }
+  ]
+ }
+}
