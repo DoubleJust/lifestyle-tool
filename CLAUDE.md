@@ -38,7 +38,7 @@
   - 已結束活動的收藏／移除紀錄由 `dailyHealthJob` 每天自動刪除（`events_cache` 每天覆寫、`log` 留 90 天、`push_log` 留 400 天）。
   - 臺北旅遊網 Open API 有 Cloudflare，Apps Script 被擋（2026-11-25 實測），不採用；Accupass、JOIN+1 沒有公開 API，依規格不爬網頁。
 - 2026-11-27 前端 1.5.0／後端 1.5.0：新增四個活動來源（見架構）。觀光署「活動－觀光資訊資料庫」的 ZIP 從 Apps Script 打不開（可能擋國外 IP），未採用；要用的話改走 TDX（需擁有者註冊取得金鑰）。
-- 2026-11-27 後端實測：桃園、Accupass、JOIN+1 從 Apps Script 都抓得到；臺北旅遊網被 Cloudflare 擋（403），改為**連結模式**（`HEALTH_SOURCES_` 的 `linkOnly`）：每天照樣試抓，抓不到時狀態是 `link`，活動頁只顯示「到 臺北旅遊網 找」按鈕，不警告、不推 LINE（前端 1.5.1／後端 1.5.1）。
+- 2026-11-27 後端實測：桃園、Accupass、JOIN+1 從 Apps Script 都抓得到；臺北旅遊網被 Cloudflare 擋（403），改為**連結模式**（`HEALTH_SOURCES_` 的 `linkOnly`）：每天照樣試抓，抓不到時狀態是 `link`，活動頁只在類別按鈕最後顯示「到 臺北旅遊網 找」，不警告、不推 LINE（前端 1.5.1／後端 1.5.1）。
 - 2026-11-27 後端 1.5.2：其他來源的活動依標題（＋Accupass 標籤）分類到和文化部相同的類別（`SRC_CATEGORY_RULES_`，由上往下第一個符合的為準），另有市集、運動、美食、節慶、旅遊走讀、聚會交友；用真實資料檢查過，「其他」約 1 成。JOIN+1 的測試活動不收。
 - 下一步：步驟 4（F4-A Maps URL）。
   - 活動篩選邏輯：後端 `EventsLib.gs`（純函式，`tests/events.test.mjs` 用 node:vm 載入測試）、前端 `docs/js/lib/events.js`。

@@ -2,7 +2,7 @@
 // API（Apps Script，跨網域）一律不經過這裡，永遠走網路。
 // 改版時執行 `node tools/bump-version.mjs`，會同時更新這裡和 js/config.js。
 
-const CACHE_VERSION = '1.5.2';
+const CACHE_VERSION = '1.5.3';
 const CACHE_NAME = `shell-${CACHE_VERSION}`;
 
 const SHELL = [

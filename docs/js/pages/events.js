@@ -181,18 +181,22 @@ export function mount(view, opts = {}) {
   }
 
   /** 抓不到的網站：改顯示「到 ○○ 找」的連結（資料來自查詢結果或 App 上次的健康檢查） */
+  /**
+   * 抓不到的網站：需要修的（fail／stale）用紅框卡片警告；連結模式的（link）只在類別按鈕最後放「到 ○○ 找」。
+   * 資料來自查詢結果，沒有時用 App 上次的健康檢查。回傳連結模式的來源，給類別那一列用。
+   */
   function renderFallback(sources) {
     const list = fallbackSources(sources || cachedHealth()?.sources);
     const broken = list.filter((s) => s.status !== 'link');
-    const names = (l) => l.map((s) => s.name).join('、');
-    fallback.hidden = list.length === 0;
-    fallback.classList.toggle('warn', broken.length > 0);   // 只有需要修的才用紅框
-    fallback.replaceChildren(...(list.length ? [
-      broken.length ? h('p', { class: 'ev-fallback-title' }, `⚠️ ${names(broken)}暫時抓不到，以下結果不包含這些網站的最新活動，可以直接到網站找：`) : null,
-      list.length > broken.length ? h('p', { class: 'ev-fallback-title' }, `${names(list.filter((s) => s.status === 'link'))}的活動目前無法自動取得，請直接到網站找：`) : null,
-      h('div', { class: 'chips' }, list.map((s) => h('a', { class: 'chip-link', href: s.link, target: '_blank', rel: 'noopener noreferrer' }, `到 ${s.name} 找 ›`)))
-    ].filter(Boolean) : []));
+    fallback.hidden = broken.length === 0;
+    fallback.classList.toggle('warn', broken.length > 0);
+    fallback.replaceChildren(...(broken.length ? [
+      h('p', { class: 'ev-fallback-title' }, `⚠️ ${broken.map((s) => s.name).join('、')}暫時抓不到，以下結果不包含這些網站的最新活動，可以直接到網站找：`),
+      h('div', { class: 'chips' }, broken.map(linkChip))
+    ] : []));
+    return list.filter((s) => s.status === 'link');
   }
+  const linkChip = (s) => h('a', { class: 'chip-link', href: s.link, target: '_blank', rel: 'noopener noreferrer' }, `到 ${s.name} 找 ›`);
 
   function render() {
     if (!data || mode !== 'search') return;
@@ -211,7 +215,7 @@ export function mount(view, opts = {}) {
     setStatus(status, warn.join(''), warn.length && !updating ? 'warn' : '');
     setSourceNote(data.fetched);
 
-    renderFallback(data.sources);
+    const linkOnly = renderFallback(data.sources);
     summary.replaceChildren(
       h('b', {}, rangeLabel(range) + (when ? `・${when}` : '')),
       ` ${where}共 ${f.total} 個活動` +
@@ -224,7 +228,7 @@ export function mount(view, opts = {}) {
       .map((c) => h('button', {
         type: 'button', class: 'chip', 'aria-pressed': c.name === cat ? 'true' : 'false',
         onclick: () => { cat = c.name; render(); }
-      }, c.label)) : []));
+      }, c.label)) : []), ...linkOnly.map(linkChip));   // 連結模式的網站放在類別最後
 
     const out = [];
     for (const g of groupByDay(f.events)) {
