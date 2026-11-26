@@ -22,11 +22,13 @@ function healthSection() {
       h('div', { class: 'health-head' }, h('b', {}, s.name), h('span', { class: 'tag' }, STATUS_LABEL[s.status] || s.status)),
       h('div', { class: 'muted' }, `最後成功：${fmtTime(s.lastOk)}` +
         (s.status === 'fail' ? `；${fmtTime(s.since)} 起連續失敗 ${s.fails} 次` : '')),
-      s.status === 'fail' && s.msg ? h('div', { class: 'muted' }, `錯誤：${s.msg}`) : null
+      (s.status === 'fail' || s.status === 'link') && s.msg ? h('div', { class: 'muted' }, `錯誤：${s.msg}`) : null
     )));
-    checkedAt.textContent = `App 上次向後端確認：${fmtTime(d.at)}。後端每天 6 點自動檢查文化部資料；LINE 在每次推播時檢查。`;
+    checkedAt.textContent = `App 上次向後端確認：${fmtTime(d.at)}。後端每天 6 點自動檢查所有活動來源；LINE 在每次推播時檢查。`;
   };
+  // 先顯示手機裡存的上次結果，再在背景向後端要最新的（設定頁一定要看到最新狀態）
   show(cachedHealth());
+  checkHealth({ force: true }).then((d) => { if (d) show(d); }).catch(() => { /* 離線：保留上次的結果 */ });
 
   const btn = h('button', { type: 'button', onclick: async () => {
     btn.disabled = true;
