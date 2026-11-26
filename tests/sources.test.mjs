@@ -37,7 +37,8 @@ test('臺北旅遊網（活動年曆 JSON）', () => {
   assert.equal(r.parsed, 7);
   assert.ok(r.rows.length >= 1, '有還沒結束的節慶');
   assert.ok(r.rows.every(isRow));
-  assert.ok(r.rows.every((x) => x.uid.startsWith('taipei-') && x.catName === '節慶' && /travel\.taipei/.test(x.url)));
+  assert.ok(r.rows.every((x) => x.uid.startsWith('taipei-') && /travel\.taipei/.test(x.url)));
+  assert.ok(r.rows.every((x) => ['節慶', '展覽', '運動', '親子'].includes(x.catName)), '依內容分類，判斷不出來時預設節慶');
   assert.ok(r.rows.every((x) => x.start.endsWith('00:00')), '只有日期');
   assert.equal(J(gas.taipeiParse_('{"success":false}', FROM, TO)).parsed, 0);
   assert.equal(J(gas.taipeiParse_('<!DOCTYPE html>Just a moment...', FROM, TO)).parsed, 0, 'Cloudflare 驗證頁');
@@ -97,4 +98,34 @@ test('evMergeRows_：文化部為主，同標題同一天的其他來源視為�
   ];
   const out = J(gas.evMergeRows_(primary, extras)).map((r) => r.uid);
   assert.deepEqual(out, ['moc1', 'moc1', 'accupass-2', 'join1-4']);
+});
+
+test('srcClassify_：依標題／標籤分到和文化部相同的類別', () => {
+  const c = (t, f) => gas.srcClassify_(t, f);
+  const cases = [
+    ['2026臺北馬拉松', '運動'], ['2026國際自由車環台賽-桃園市站', '運動'], ['70% Tabata', '運動'],
+    ['2026桃園冷飲節', '美食'], ['2026溪海西瓜節', '節慶'], ['2026桃園彩色海芋季-園夢奇芋記', '節慶'],
+    ['2026桃園眷村文化節「一村一家人」', '節慶'], ['2025繽紛耶誕玩台北', '節慶'],
+    ['《全方位職場療癒班》 IP 插畫展', '展覽'], ['2026台灣設計展在桃園', '展覽'], ['2026士林官邸菊展', '展覽'],
+    ['「大音希聲」2026桃園國樂節', '音樂'], ['樂聚OPEN MIC', '音樂'],
+    ['2026桃園藝術巡演中壢場-蘋果劇團《追夢投手果果》兒童劇', '親子'], ['瘋狂年代看戲嚕', '戲劇'],
+    ['周週洗鞋野牛盃🦬', '競賽'], ['法式溫暖的。手織杯墊體驗', '研習課程'], ['給大人的繪本英文課', '研習課程'],
+    ['受夠城市的喧囂，爽吃爽玩的露營趣', '旅遊走讀'], ['2027惡霸同學會-犬聚活動', '聚會交友'],
+    ['〘ADHD 脫軌聊天室：思緒亂飛也沒關係〙part.3', '講座'], ['重返巔峰北壁 X GREENERGIZE 電影邀約', '電影'],
+    ['萬家福 樂家康 美好+1生活節', '市集'], ['大稻埕永續百貨【英倫聖誕嘉年華 Great British Christmas Festival 2026】', '節慶']
+  ];
+  for (const [t, want] of cases) assert.equal(c(t), want, t);
+  // 「發展」「展開」不是展覽
+  assert.equal(c('【發展你的優勢人生】'), '其他');
+  assert.equal(c('看看計畫如何展開'), '其他');
+  // Accupass 標籤也算進去；都不符合時用來源的預設
+  assert.equal(c('熱帶檔案 Tropical Archive｜＃五感體驗'), '研習課程');
+  assert.equal(c('2026臺灣年味在臺北', '節慶'), '節慶');
+  assert.equal(c('來看看距離'), '其他');
+});
+
+test('JOIN+1：主辦方的測試活動不收', () => {
+  const e = { title: '測試', start: '2026-12-01 10:00', end: '2026-12-01 11:00', addr: '臺北市中正區', venue: 'x', price: '', code: 'T1' };
+  assert.equal(J(gas.join1Rows_([e, { ...e, title: 'TEST2' }, { ...e, title: '打開台北測試活動09V0002' }], FROM, TO)).length, 0);
+  assert.equal(J(gas.join1Rows_([{ ...e, title: '測試你的耐力：夜跑' }], FROM, TO)).length, 1, '標題含「測試」但不是測試活動');
 });

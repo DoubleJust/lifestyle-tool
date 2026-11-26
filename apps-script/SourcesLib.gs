@@ -8,11 +8,43 @@
  */
 
 const SRC_INFO_ = {
-  taipei: { src: '臺北旅遊網', catName: '節慶' },
-  tycg: { src: '桃園觀光導覽網', catName: '觀光活動' },
-  accupass: { src: 'Accupass', catName: '民間活動' },
-  join1: { src: 'JOIN+1', catName: '揪團聚會' }
+  taipei: { src: '臺北旅遊網', fallback: '節慶' },        // 臺北旅遊網的活動年曆都是節慶
+  tycg: { src: '桃園觀光導覽網', fallback: '其他' },
+  accupass: { src: 'Accupass', fallback: '其他' },
+  join1: { src: 'JOIN+1', fallback: '其他' }
 };
+
+/**
+ * 依標題（＋Accupass 標籤）判斷類別，用和文化部相同的類別名稱，另外多了市集、運動、節慶、走讀導覽、聚會交友。
+ * 由上往下比對，第一個符合的為準（順序有意義：「音樂劇」要先算戲劇、「親子音樂會」先算親子）。
+ */
+// 「結尾」＝字串結束，或後面接空白、｜（標題和標籤之間用｜隔開）、破折號、引號、括號、冒號
+const SRC_CATEGORY_RULES_ = [
+  ['親子', /親子|兒童|小朋友|孩子|孩童|童話|寶寶|幼兒|家庭日|小小|小天使/i],
+  ['演唱會', /演唱會|巡迴演唱|concert tour|fan ?meeting|見面會/i],
+  ['戲劇', /音樂劇|戲劇|劇場|劇團|舞台劇|話劇|讀劇|喜劇|脫口秀|即興|單口|布袋戲|歌仔戲|京劇|偶戲|看戲|musical/i],
+  ['競賽', /比賽|大賽|競賽|錦標|[^\s｜]盃|徵選|選拔/i],
+  ['運動', /馬拉松|路跑|半馬|全馬|單車|自行車|自由車|環台賽|車賽|登山|健行|瑜[珈伽]|運動|跑步|跑聚|鐵人|健走|騎乘|球賽|桌球|羽球|籃球|游泳|攀岩|夜跑|tabata|燒脂|瘦身|爆汗|健身|running|yoga/i],
+  ['舞蹈', /舞蹈|舞團|芭蕾|街舞|舞作|ballet|dance/i],
+  ['電影', /電影|放映|影展|紀錄片|觀影|film|movie|cinema/i],
+  ['音樂', /音樂|演奏|獨奏|合唱|樂團|爵士|交響|室內樂|國樂|擊樂|打擊樂|鋼琴|提琴|管風琴|吉他|樂器|歌手|歌單|open ?mic|k-?pop|live house|jazz/i],
+  ['市集', /市集|擺攤|跳蚤|二手|快閃店|market|生活節|購物節|威購/i],
+  ['美食', /美食|料理|熱炒|點心|甜點|烘焙|瑪德蓮|炸物|品酒|品飲|威士忌|咖啡|茶會|下午茶|米干|小吃|冷飲/i],
+  ['講座', /講座|座談|分享會|論壇|讀書|書寫|沙龍|演講|對談|講堂|說明會|交流|聊天|聊嗎|諮詢|之道|秘訣|talk|seminar/i],
+  ['研習課程', /課程|工作坊|體驗課|手作|DIY|教學|研習|培訓|學院|上課|一日課|社課|共學|入門|[^\s｜]課(?=$|[\s｜])|[^\s｜]班(?=$|[\s｜（(])|體驗|workshop|class/i],
+  ['展覽', /特展|個展|聯展|展覽|策展|博覽會|展演|常設展|沉浸式|主題店|(?<![發開伸拓進擴施])展(?![開現望示露延])|exhibition/i],
+  ['旅遊走讀', /走讀|導覽|小旅行|散策|散步|探索|遊程|一日遊|巡禮|踏查|露營|農遊|農場|進香|參香|走春|鐵道|tour/i],
+  ['聚會交友', /聚會|交友|聯誼|桌遊|派對|配對|約會|社交|揪團|同學會|小聚|犬聚|微醺|邊緣|party/i],
+  ['節慶', /節慶|祭典|燈會|燈節|嘉年華|跨年|聖誕|耶誕|元宵|萬聖|財神|母親節|父親節|中秋|端午|花季|花海|慶典|豐年祭|樂會|節(?=$|[\s｜\-－—「『《(（:：])|季(?=$|[\s｜\-－—「『《(（:：])|christmas|festival/i]
+];
+
+function srcClassify_(text, fallback) {
+  const t = String(text || '').trim();
+  for (let i = 0; i < SRC_CATEGORY_RULES_.length; i++) {
+    if (SRC_CATEGORY_RULES_[i][1].test(t)) return SRC_CATEGORY_RULES_[i][0];
+  }
+  return fallback || '其他';
+}
 
 function srcDecode_(s) {
   return String(s == null ? '' : s)
@@ -42,7 +74,7 @@ function srcRow_(key, o, from, toEx) {
   if (o.start.slice(0, 10) >= toEx || end.slice(0, 10) < from) return null;
   return {
     uid: (key + '-' + String(o.id)).replace(/[^A-Za-z0-9_\-]/g, '').slice(0, 64),
-    title: title, cat: '', catName: info.catName, url: evUrl_(o.url), src: info.src,
+    title: title, cat: '', catName: srcClassify_(title + (o.tags ? '｜' + o.tags : ''), info.fallback), url: evUrl_(o.url), src: info.src,
     start: o.start, end: end, city: o.city, approx: !!o.approx,
     venue: evClean_(o.venue, 80), addr: evClean_(o.addr, 120), price: evClean_(o.price, EV_MAX_PRICE_)
   };
@@ -154,7 +186,8 @@ function accupassParseList_(html) {
     return {
       id: String(o.eventId), name: srcDecode_(o.name),
       start: srcIsoToTaipei_(o.startDateTime), end: srcIsoToTaipei_(o.endDateTime),
-      city: ACC_CITY_[o.location] || null, offline: o.eventPlaceType !== 'Online'
+      city: ACC_CITY_[o.location] || null, offline: o.eventPlaceType !== 'Online',
+      tags: (Array.isArray(o.tags) ? o.tags : []).map(function (t) { return srcDecode_(t && t.name || ''); }).join(' ').slice(0, 200)
     };
   });
 }
@@ -199,7 +232,7 @@ function accupassRows_(items, details, from, toEx) {
     const r = srcRow_('accupass', {
       id: it.id, title: it.name, url: 'https://www.accupass.com/event/' + it.id,
       start: (d && d.start) || it.start, end: (d && d.end) || it.end, city: where.city, approx: where.approx,
-      venue: d ? d.venue : '', addr: addr, price: d ? d.price : ''
+      venue: d ? d.venue : '', addr: addr, price: d ? d.price : '', tags: it.tags
     }, from, toEx);
     if (r) rows.push(r);
   });
@@ -255,7 +288,7 @@ function join1ParseEvent_(html) {
 function join1Rows_(events, from, toEx) {
   const rows = [];
   events.forEach(function (e) {
-    if (!e) return;
+    if (!e || /^(測試|test\d*)$|測試活動/i.test(e.title)) return;   // 主辦方留在網站上的測試活動
     const where = srcCity_(e.addr, null);
     const r = srcRow_('join1', {
       id: e.code, title: e.title, url: 'https://join1.app/event/' + e.code, start: e.start, end: e.end,
